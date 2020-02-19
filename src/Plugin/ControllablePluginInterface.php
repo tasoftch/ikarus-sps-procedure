@@ -21,46 +21,44 @@
  * SOFTWARE.
  */
 
-namespace Ikarus\SPS\Procedure\Instruction\Workflow;
-
-
-use Ikarus\SPS\Procedure\Context\ContextInterface;
-use Ikarus\SPS\Procedure\Instruction\AbstractInstruction;
+namespace Ikarus\SPS\Procedure\Plugin;
 
 /**
- * Class JumpInstruction
- * Jumps to a specified instruction defined by identifier.
+ * A controllable plugin can directly called by the
  *
- * Please note that the target instruction must be invoked before jumping to it!
  *
- * @package Ikarus\SPS\Procedure\Instruction\Workflow
- * @see TargetInstruction
+ * @package Ikarus\SPS\Procedure\Plugin
  */
-class JumpInstruction extends AbstractInstruction
+interface ControllablePluginInterface
 {
-    /** @var string */
-    private $targetID;
+    const STATUS_OFF = 1;
+    const STATUS_ON = 2;
+    const STATUS_ERROR = 4;
+    const STATUS_MANUAL = 8;
 
     /**
-     * JumpInstruction constructor.
-     * @param string $targetID
+     * Gets the current status
+     *
+     * @return int
      */
-    public function __construct(string $targetID)
-    {
-        $this->targetID = $targetID;
-    }
-
+    public function getStatus(): int;
 
     /**
-     * @return string
+     * Sets the current status by auto workflows
+     *
+     * @param int $status
      */
-    public function getTargetID(): string
-    {
-        return $this->targetID;
-    }
+    public function setStatus(int $status);
 
-    protected function doExec(ContextInterface $context)
-    {
-        $this->nextInstruction = TargetInstruction::getTarget( $this->getTargetID() );
-    }
+    /**
+     * Sets a manual status which covers the automatically status
+     *
+     * @param int $status
+     */
+    public function setManualStatus(int $status);
+
+    /**
+     * Resigns the manual status and go back to automatically status
+     */
+    public function resignManualStatus();
 }

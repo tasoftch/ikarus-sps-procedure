@@ -26,7 +26,6 @@ namespace Ikarus\SPS\Procedure\Plugin;
 
 use Ikarus\SPS\Plugin\Cyclic\AbstractCyclicPlugin;
 use Ikarus\SPS\Plugin\Management\CyclicPluginManagementInterface;
-use Ikarus\SPS\Procedure\Context\ContextInterface;
 use Ikarus\SPS\Procedure\Context\CyclicContext;
 
 class CyclicProcedurePlugin extends AbstractCyclicPlugin

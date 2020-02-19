@@ -30,18 +30,35 @@
 
 use Ikarus\SPS\Helper\CyclicPluginManager;
 use Ikarus\SPS\Procedure\Context\CyclicContext;
+use Ikarus\SPS\Procedure\Instruction\ArrayInstructionsMapper;
+use Ikarus\SPS\Procedure\Instruction\CallbackInstruction;
+use Ikarus\SPS\Procedure\Instruction\Workflow\IfInstruction;
+use Ikarus\SPS\Procedure\Instruction\Workflow\JumpInstruction;
 use Ikarus\SPS\Procedure\Instruction\Workflow\TargetInstruction;
 use Ikarus\SPS\Procedure\NamedProcedure;
 use PHPUnit\Framework\TestCase;
 
 class ProcedureTest extends TestCase
 {
-    public function testOneInstructionProcedure() {
-        $proc = new NamedProcedure('test', new TargetInstruction('1'));
+    public function testJumpingInstructionsProcedure() {
+        $proc = new NamedProcedure(
+            'test',
+            (new TargetInstruction('begin'))
+                ->setNextInstruction((new IfInstruction(
+                    function() use (&$count) { return $count++ < 4; },
+                    (new ArrayInstructionsMapper(
+                        new CallbackInstruction(function() { echo "Hello"; }),
+                        new CallbackInstruction(function() use (&$count) { echo " $count\n"; }),
+                        new JumpInstruction('begin')
+                    ))
+                )))
+        );
 
         $pm = new CyclicPluginManager();
         $ctx = new CyclicContext($pm);
 
         $ctx->executeProcedure($proc);
+
+        $this->assertEquals("Hello 1\nHello 2\nHello 3\nHello 4\n", $this->getActualOutput());
     }
 }

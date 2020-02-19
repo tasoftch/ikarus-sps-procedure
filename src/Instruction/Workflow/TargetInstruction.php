@@ -41,6 +41,8 @@ class TargetInstruction extends AbstractInstruction
     /** @var string */
     private $targetID;
 
+    private static $targets = [];
+
     /**
      * TargetInstruction constructor.
      * @param string $targetID
@@ -50,6 +52,7 @@ class TargetInstruction extends AbstractInstruction
     {
         $this->targetID = $targetID;
         $this->nextInstruction = $nextInstruction;
+        self::$targets[ $targetID ] = $this;
     }
 
     /**
@@ -58,6 +61,15 @@ class TargetInstruction extends AbstractInstruction
     public function getTargetID(): string
     {
         return $this->targetID;
+    }
+
+    /**
+     * @param $targetID
+     * @return InstructionInterface|null
+     * @internal
+     */
+    public static function getTarget($targetID): ?InstructionInterface {
+        return self::$targets[$targetID] ?? NULL;
     }
 
     protected function doExec(ContextInterface $context)

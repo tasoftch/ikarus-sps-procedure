@@ -52,6 +52,11 @@ interface ContextInterface
     public function isPaused(): bool;
 
     /**
+     * Calling this method from an instruction stops further executation of the instructions and returns to the sps control.
+     */
+    public function waitForNextLoop();
+
+    /**
      * Tells the context, that this instruction should be invoked again on next cycle
      * CycleEngine only!
      * @see CyclicEngine

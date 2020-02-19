@@ -21,46 +21,37 @@
  * SOFTWARE.
  */
 
-namespace Ikarus\SPS\Procedure\Instruction\Workflow;
+namespace Ikarus\SPS\Procedure\Instruction;
 
 
 use Ikarus\SPS\Procedure\Context\ContextInterface;
-use Ikarus\SPS\Procedure\Instruction\AbstractInstruction;
 
-/**
- * Class JumpInstruction
- * Jumps to a specified instruction defined by identifier.
- *
- * Please note that the target instruction must be invoked before jumping to it!
- *
- * @package Ikarus\SPS\Procedure\Instruction\Workflow
- * @see TargetInstruction
- */
-class JumpInstruction extends AbstractInstruction
+class CallbackInstruction extends AbstractInstruction
 {
-    /** @var string */
-    private $targetID;
+    /** @var callable */
+    private $callback;
 
     /**
-     * JumpInstruction constructor.
-     * @param string $targetID
+     * CallbackInstruction constructor.
+     * @param callable $callback
+     * @param InstructionInterface|null $nextInstruction
      */
-    public function __construct(string $targetID)
+    public function __construct(callable $callback, InstructionInterface $nextInstruction = NULL)
     {
-        $this->targetID = $targetID;
+        $this->callback = $callback;
+        $this->nextInstruction = $nextInstruction;
     }
 
-
     /**
-     * @return string
+     * @return callable
      */
-    public function getTargetID(): string
+    public function getCallback(): callable
     {
-        return $this->targetID;
+        return $this->callback;
     }
 
     protected function doExec(ContextInterface $context)
     {
-        $this->nextInstruction = TargetInstruction::getTarget( $this->getTargetID() );
+        call_user_func($this->getCallback(), $context);
     }
 }
