@@ -24,9 +24,14 @@
 namespace Ikarus\SPS\Procedure\Context;
 
 
+use Ikarus\SPS\Alert\NoticeAlert;
+use Ikarus\SPS\Alert\RecoveryAlert;
+use Ikarus\SPS\Alert\WarningAlert;
 use Ikarus\SPS\EngineInterface;
+use Ikarus\SPS\Exception\SPSException;
 use Ikarus\SPS\Plugin\Management\PluginManagementInterface;
 use Ikarus\SPS\Procedure\Instruction\InstructionInterface;
+use Ikarus\SPS\Procedure\Instruction\Workflow\TargetInstruction;
 use Ikarus\SPS\Procedure\ProcedureInterface;
 
 abstract class AbstractContext implements ContextInterface
@@ -38,11 +43,33 @@ abstract class AbstractContext implements ContextInterface
     /** @var ProcedureInterface */
     private $procedure;
     /** @var InstructionInterface */
-    private $instruction;
+    private $instruction, $interruption;
+    /** @var null|callable */
+    private $interruptionCB;
+
     private $paused = false;
+    private $interrupted = false;
+
+    /**
+     * @return bool
+     */
+    public function isInterrupted(): bool
+    {
+        return $this->interrupted;
+    }
 
     private $repeat = false;
     private $wait = false;
+
+    public $arguments;
+
+    /**
+     * @return mixed
+     */
+    public function getArguments()
+    {
+        return $this->arguments;
+    }
 
     /**
      * AbstractContext constructor.
@@ -68,7 +95,6 @@ abstract class AbstractContext implements ContextInterface
     {
         $this->procedure = $procedure;
         $this->instruction = $procedure->getInitialInstruction();
-        $this->exec();
     }
 
     /**
@@ -99,6 +125,7 @@ abstract class AbstractContext implements ContextInterface
 
 
     public function exec() {
+        restart:
         while($this->instruction) {
             $this->wait = $this->repeat = false;
             $this->instruction->execute($this);
@@ -109,6 +136,30 @@ abstract class AbstractContext implements ContextInterface
             if($this->wait)
                 return;
         }
+
+        if($this->interruption) {
+            $this->interrupted = false;
+            $this->instruction = $this->interruption;
+            $this->interruption = NULL;
+            if($this->interruptionCB)
+                ($this->interruptionCB)();
+            $this->interruptionCB = NULL;
+            goto restart;
+        }
+    }
+
+    public function interruptWithInstruction(InstructionInterface $instruction, callable $returnCallback = NULL)
+    {
+        if($this->interrupted) {
+            throw new SPSException("Can not interrupt an interrupted procedure", -154);
+        }
+
+        $this->interrupted = true;
+        $this->interruption = $this->repeat ? $this->instruction : $this->instruction->getNextInstruction();
+
+        // Because of next instruction call, use a placeholder
+        $this->instruction = new TargetInstruction("", $instruction);
+        $this->interruptionCB = $returnCallback;
     }
 
     public function has(): bool {
@@ -121,5 +172,37 @@ abstract class AbstractContext implements ContextInterface
     public function getEngine(): ?EngineInterface
     {
         return $this->engine;
+    }
+
+    public function triggerNotice(int $code, $message, string $pluginID = NULL, ...$arguments)
+    {
+        $alert = new NoticeAlert($code, $message, $pluginID, ...$arguments);
+        $this->getPluginManager()->triggerAlert($alert);
+    }
+
+    public function triggerWarning(int $code, $message, string $pluginID = NULL, InstructionInterface $emergencyInstruction = NULL, ...$arguments)
+    {
+        $alert = new WarningAlert($code, $message, $pluginID, ...$arguments);
+        $this->getPluginManager()->triggerAlert($alert);
+
+        if($emergencyInstruction)
+            $this->interruptWithInstruction($emergencyInstruction);
+    }
+
+    public function triggerError(int $code, $message, string $pluginID = NULL, InstructionInterface $emergencyInstruction = NULL, InstructionInterface $continueInstruction = NULL, ...$arguments)
+    {
+        $alert = new RecoveryAlert($code, $message, $pluginID, ...$arguments);
+        $alert->setCallback(function() use ($continueInstruction) {
+            $this->paused = false;
+            $this->instruction = $continueInstruction ?: $this->instruction->getNextInstruction();
+        });
+
+        $this->getPluginManager()->triggerAlert($alert);
+
+        if($emergencyInstruction)
+            $this->interruptWithInstruction($emergencyInstruction, function() {
+                $this->paused = true;
+                $this->wait = true;     // leave the exec loop
+            });
     }
 }

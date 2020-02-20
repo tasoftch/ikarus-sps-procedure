@@ -24,9 +24,6 @@
 namespace Ikarus\SPS\Procedure\Context;
 
 
-use Ikarus\SPS\Procedure\ProcedureInterface;
-
 class CyclicContext extends AbstractContext
 {
-
 }

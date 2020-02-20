@@ -24,14 +24,19 @@
 namespace Ikarus\SPS\Procedure\Plugin;
 
 
+use Ikarus\SPS\EngineInterface;
 use Ikarus\SPS\Plugin\Cyclic\AbstractCyclicPlugin;
+use Ikarus\SPS\Plugin\EngineDependentPluginInterface;
 use Ikarus\SPS\Plugin\Management\CyclicPluginManagementInterface;
 use Ikarus\SPS\Procedure\Context\CyclicContext;
 
-class CyclicProcedurePlugin extends AbstractCyclicPlugin
+class CyclicProcedurePlugin extends AbstractCyclicPlugin implements EngineDependentPluginInterface
 {
     use ProcedurePluginTrait;
     private $runningProcedureContexts = [];
+
+    /** @var EngineInterface */
+    private $engine;
 
 
     public function __construct(string $identifier)
@@ -42,10 +47,14 @@ class CyclicProcedurePlugin extends AbstractCyclicPlugin
     public function update(CyclicPluginManagementInterface $pluginManagement)
     {
         if($pluginManagement->hasCommand("$this->identifier.RUNPROC")) {
-            $info = (string) $pluginManagement->getCommand("$this->identifier.RUNPROC");
-            $proc = $this->getProcedure( $info );
+            $info = $pluginManagement->getCommand("$this->identifier.RUNPROC");
+            $pluginManagement->clearCommand("$this->identifier.RUNPROC");
+
+            $cmd = array_shift($info);
+            $proc = $this->getProcedure( $cmd );
             if($proc) {
-                $ctx = new CyclicContext($pluginManagement);
+                $ctx = new CyclicContext($pluginManagement, $this->engine);
+                $ctx->arguments = $info;
                 $this->runningProcedureContexts[] = $ctx;
                 $ctx->executeProcedure($proc);
             }
@@ -58,5 +67,13 @@ class CyclicProcedurePlugin extends AbstractCyclicPlugin
         foreach($this->runningProcedureContexts as $ctx) {
             $ctx->exec();
         }
+    }
+
+    /**
+     * @param EngineInterface $engine
+     */
+    public function setEngine(?EngineInterface $engine): void
+    {
+        $this->engine = $engine;
     }
 }

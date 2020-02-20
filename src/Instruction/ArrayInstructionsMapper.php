@@ -30,7 +30,6 @@ class ArrayInstructionsMapper implements InstructionInterface
 {
     /** @var InstructionInterface[] */
     private $instructions;
-    private $position = 0;
 
     public function __construct(...$instructions)
     {
@@ -39,19 +38,24 @@ class ArrayInstructionsMapper implements InstructionInterface
 
     public function execute(ContextInterface $context)
     {
-        if($instruction = $this->instructions[$this->position] ?? NULL) {
-            $instruction->execute($context);
-        }
+        // NOOP
     }
 
     public function getNextInstruction(): ?InstructionInterface
     {
-        if(isset($this->instructions[ ++$this->position ]))
-            return $this;
+        if($this->instructions) {
+            $instruction = $this->instructions[0];
+            $last = $instruction;
 
-        $inst = isset($this->instructions[$this->position-1]) ? $this->instructions[$this->position-1]->getNextInstruction() : NULL;
-        $this->position = 0;
-        return $inst;
+            for($e=1;$e<count($this->instructions);$e++) {
+                $next = $this->instructions[$e];
+                if($last instanceof AbstractInstruction)
+                    $last->setNextInstruction($next);
+                $last = $next;
+            }
+            return $instruction;
+        }
+        return NULL;
     }
 
     /**

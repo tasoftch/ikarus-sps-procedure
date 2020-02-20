@@ -28,7 +28,11 @@
  * Created on 2020-02-18 16:47 by thomas
  */
 
+use Ikarus\SPS\Alert\AlertInterface;
+use Ikarus\SPS\Alert\NoticeAlert;
+use Ikarus\SPS\Alert\WarningAlert;
 use Ikarus\SPS\Helper\CyclicPluginManager;
+use Ikarus\SPS\Procedure\Context\ContextInterface;
 use Ikarus\SPS\Procedure\Context\CyclicContext;
 use Ikarus\SPS\Procedure\Instruction\ArrayInstructionsMapper;
 use Ikarus\SPS\Procedure\Instruction\CallbackInstruction;
@@ -37,6 +41,7 @@ use Ikarus\SPS\Procedure\Instruction\Workflow\JumpInstruction;
 use Ikarus\SPS\Procedure\Instruction\Workflow\TargetInstruction;
 use Ikarus\SPS\Procedure\NamedProcedure;
 use PHPUnit\Framework\TestCase;
+use TASoft\Util\ValueInjector;
 
 class ProcedureTest extends TestCase
 {
@@ -58,7 +63,113 @@ class ProcedureTest extends TestCase
         $ctx = new CyclicContext($pm);
 
         $ctx->executeProcedure($proc);
+        $ctx->exec();
 
         $this->assertEquals("Hello 1\nHello 2\nHello 3\nHello 4\n", $this->getActualOutput());
+    }
+
+    public function testNoticeAlert() {
+        $instruction = new ArrayInstructionsMapper(
+            new TargetInstruction("retry"),
+            new CallbackInstruction(function(ContextInterface $ctx) {
+                $ctx->triggerNotice(14, "Och nöö", NULL);
+            }),
+            new CallbackInstruction(function() use (&$reached) {
+                $reached = true;
+            })
+        );
+
+        $proc = new NamedProcedure("hi", $instruction);
+
+        $pm = new CyclicPluginManager();
+        $ctx = new CyclicContext($pm);
+        $vi = new ValueInjector($pm);
+
+        $alerts = [];
+        $vi->tra = function(AlertInterface $alert) use (&$alerts) {
+            $alerts[] = $alert;
+        };
+
+        $ctx->executeProcedure($proc);
+        $ctx->exec();
+
+        $this->assertCount(1, $alerts);
+        $alert = $alerts[0];
+        $this->assertInstanceOf(NoticeAlert::class, $alert);
+        $this->assertEquals(14, $alert->getCode());
+        $this->assertEquals("Och nöö", $alert->getMessage());
+
+        $this->assertTrue($reached);
+    }
+
+    public function testWarningAlert() {
+        $instruction = new ArrayInstructionsMapper(
+            new TargetInstruction("retry"),
+            new CallbackInstruction(function(ContextInterface $ctx) {
+                $ctx->triggerWarning(14, "Och nöö", NULL, NULL);
+            }),
+            new CallbackInstruction(function() use (&$reached) {
+                $reached = true;
+            })
+        );
+
+        $proc = new NamedProcedure("hi", $instruction);
+
+        $pm = new CyclicPluginManager();
+        $ctx = new CyclicContext($pm);
+        $vi = new ValueInjector($pm);
+
+        $alerts = [];
+        $vi->tra = function(AlertInterface $alert) use (&$alerts) {
+            $alerts[] = $alert;
+        };
+
+        $ctx->executeProcedure($proc);
+        $ctx->exec();
+
+        $this->assertCount(1, $alerts);
+        $alert = $alerts[0];
+        $this->assertInstanceOf(WarningAlert::class, $alert);
+        $this->assertEquals(14, $alert->getCode());
+        $this->assertEquals("Och nöö", $alert->getMessage());
+
+        $this->assertTrue($reached);
+    }
+
+    public function testInterruption() {
+        $interruptions = new ArrayInstructionsMapper(
+            new CallbackInstruction(function() use (&$names) {
+                $names[] = 'Priska';
+            }),
+            new CallbackInstruction(function() use (&$names) {
+                $names[] = 'Bettina';
+            })
+        );
+
+        $proc = new NamedProcedure("hi", new ArrayInstructionsMapper(
+                new CallbackInstruction(function() use (&$names) {
+                    $names[] = 'Thomas';
+                }),
+                new CallbackInstruction(function(ContextInterface $context) use ($interruptions) {
+                    $context->interruptWithInstruction( $interruptions );
+                }),
+                new CallbackInstruction(function() use (&$names) {
+                    $names[] = 'Thomas';
+                })
+            )
+        );
+
+        $pm = new CyclicPluginManager();
+        $ctx = new CyclicContext($pm);
+
+        $ctx->executeProcedure($proc);
+        $ctx->exec();
+
+        $this->assertEquals([
+            "Thomas",
+            "Priska",
+            "Bettina",
+            "Thomas"
+        ], $names);
     }
 }

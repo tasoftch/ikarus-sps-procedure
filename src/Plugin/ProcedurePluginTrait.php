@@ -38,7 +38,10 @@ trait ProcedurePluginTrait
      */
     public function setProcedures(array $procedures)
     {
-        $this->procedures = $procedures;
+        $this->procedures = [];
+        foreach($procedures as $procedure) {
+            $this->addProcedure($procedure);
+        }
         return $this;
     }
 
