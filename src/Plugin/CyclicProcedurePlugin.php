@@ -30,7 +30,7 @@ use Ikarus\SPS\Plugin\EngineDependentPluginInterface;
 use Ikarus\SPS\Plugin\Management\CyclicPluginManagementInterface;
 use Ikarus\SPS\Procedure\Context\CyclicContext;
 
-class CyclicProcedurePlugin extends AbstractCyclicPlugin implements EngineDependentPluginInterface
+class CyclicProcedurePlugin extends AbstractCyclicPlugin implements EngineDependentPluginInterface, ProcedurePluginInterface
 {
     use ProcedurePluginTrait;
     private $runningProcedureContexts = [];
@@ -38,17 +38,13 @@ class CyclicProcedurePlugin extends AbstractCyclicPlugin implements EngineDepend
     /** @var EngineInterface */
     private $engine;
 
-
-    public function __construct(string $identifier)
-    {
-        $this->identifier = $identifier;
-    }
-
     public function update(CyclicPluginManagementInterface $pluginManagement)
     {
-        if($pluginManagement->hasCommand("$this->identifier.RUNPROC")) {
-            $info = $pluginManagement->getCommand("$this->identifier.RUNPROC");
-            $pluginManagement->clearCommand("$this->identifier.RUNPROC");
+        $ID = $this->getIdentifier();
+
+        if($pluginManagement->hasCommand("$ID.RUNPROC")) {
+            $info = $pluginManagement->getCommand("$ID.RUNPROC");
+            $pluginManagement->clearCommand("$ID.RUNPROC");
 
             $cmd = array_shift($info);
             $proc = $this->getProcedure( $cmd );

@@ -24,58 +24,14 @@
 namespace Ikarus\SPS\Procedure\Plugin;
 
 
+use Ikarus\SPS\Plugin\PluginInterface;
 use Ikarus\SPS\Procedure\ProcedureInterface;
 
-trait ProcedurePluginTrait
+interface ProcedurePluginInterface extends PluginInterface
 {
-    /** @var ProcedureInterface[] */
-    protected $procedures = [];
-
-    /**
-     * @param ProcedureInterface[] $procedures
-     * @return static
-     */
-    public function setProcedures(array $procedures)
-    {
-        $this->procedures = [];
-        foreach($procedures as $procedure) {
-            $this->addProcedure($procedure);
-        }
-        return $this;
-    }
-
-    /**
-     * @return ProcedureInterface[]
-     */
-    public function getProcedures(): array
-    {
-        return $this->procedures;
-    }
-
-    /**
-     * @param ProcedureInterface $object
-     */
-    public function addProcedure(ProcedureInterface $object) {
-        $this->procedures[$object->getName()] = $object;
-    }
-
-    /**
-     * @param $procedure
-     */
-    public function removeProcedure($procedure) {
-        if($procedure instanceof ProcedureInterface) {
-            if(($idx = array_search($procedure, $this->procedures)) !== false)
-                unset($this->procedures[$idx]);
-        } elseif(isset($this->procedures[$procedure])) {
-            unset($this->procedures[$procedure]);
-        }
-    }
-
     /**
      * @param $name
      * @return ProcedureInterface|null
      */
-    public function getProcedure($name): ?ProcedureInterface {
-        return $this->procedures[$name instanceof ProcedureInterface ? $name->getName() : $name] ?? NULL;
-    }
+    public function getProcedure($name): ?ProcedureInterface;
 }
