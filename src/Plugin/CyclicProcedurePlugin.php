@@ -30,7 +30,7 @@ use Ikarus\SPS\Plugin\EngineDependentPluginInterface;
 use Ikarus\SPS\Plugin\Management\CyclicPluginManagementInterface;
 use Ikarus\SPS\Procedure\Context\CyclicContext;
 
-class CyclicProcedurePlugin extends AbstractCyclicPlugin implements EngineDependentPluginInterface, ProcedurePluginInterface
+class CyclicProcedurePlugin extends AbstractCyclicPlugin implements EngineDependentPluginInterface, MutableProcedurePluginInterface
 {
     use ProcedurePluginTrait;
     private $runningProcedureContexts = [];

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5e29127ae76c96730eff94324f5c5fa0",
+    "content-hash": "f463eca6c0d5ecba0b24eba66e75efdb",
     "packages": [
         {
             "name": "ikarus/sps",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/tasoftch/ikarus-sps.git",
-                "reference": "3126b497ef1399337fcdb2b887f2758b754bbdaf"
+                "reference": "81f116618cfef0599d46254796e3a8c4ee57ae5a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tasoftch/ikarus-sps/zipball/3126b497ef1399337fcdb2b887f2758b754bbdaf",
-                "reference": "3126b497ef1399337fcdb2b887f2758b754bbdaf",
+                "url": "https://api.github.com/repos/tasoftch/ikarus-sps/zipball/81f116618cfef0599d46254796e3a8c4ee57ae5a",
+                "reference": "81f116618cfef0599d46254796e3a8c4ee57ae5a",
                 "shasum": ""
             },
             "require": {
@@ -48,7 +48,7 @@
                     "email": "info@tasoft.ch"
                 }
             ],
-            "time": "2020-02-20T14:44:42+00:00"
+            "time": "2020-02-22T10:52:42+00:00"
         },
         {
             "name": "tasoft/collection",
@@ -265,6 +265,119 @@
             "time": "2019-12-23T19:18:31+00:00"
         },
         {
+            "name": "ikarus/sps-client",
+            "version": "v0.1.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tasoftch/ikarus-sps-client.git",
+                "reference": "4fcde0da09ecbbb683cfc0f34c455f2a9f183d6a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tasoftch/ikarus-sps-client/zipball/4fcde0da09ecbbb683cfc0f34c455f2a9f183d6a",
+                "reference": "4fcde0da09ecbbb683cfc0f34c455f2a9f183d6a",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ikarus\\SPS\\Client\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Thomas Abplanalp",
+                    "email": "info@tasoft.ch"
+                }
+            ],
+            "time": "2020-02-20T13:56:49+00:00"
+        },
+        {
+            "name": "ikarus/sps-server",
+            "version": "v0.1.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tasoftch/ikarus-sps-server.git",
+                "reference": "2b48854e77f444085c4a3be75b9fc4c5a95668b6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tasoftch/ikarus-sps-server/zipball/2b48854e77f444085c4a3be75b9fc4c5a95668b6",
+                "reference": "2b48854e77f444085c4a3be75b9fc4c5a95668b6",
+                "shasum": ""
+            },
+            "require": {
+                "ext-sockets": "*",
+                "ikarus/sps": "dev-master",
+                "php": "^7.2"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ikarus\\SPS\\Server\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Thomas Abplanalp",
+                    "email": "info@tasoft.ch"
+                }
+            ],
+            "time": "2020-02-24T17:45:03+00:00"
+        },
+        {
+            "name": "ikarus/sps-visualizer",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tasoftch/ikarus-sps-visualizer.git",
+                "reference": "202e33099668cb0d146ac80b74c694f22ab57650"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tasoftch/ikarus-sps-visualizer/zipball/202e33099668cb0d146ac80b74c694f22ab57650",
+                "reference": "202e33099668cb0d146ac80b74c694f22ab57650",
+                "shasum": ""
+            },
+            "require": {
+                "ikarus/sps": "dev-master",
+                "ikarus/sps-client": "^0.1",
+                "ikarus/sps-server": "^0.1",
+                "php": "^7.2"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Ikarus\\SPS\\Visualizer\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Thomas Abplanalp",
+                    "email": "info@tasoft.ch"
+                }
+            ],
+            "time": "2020-02-24T17:48:07+00:00"
+        },
+        {
             "name": "myclabs/deep-copy",
             "version": "1.x-dev",
             "source": {
@@ -472,12 +585,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionDocBlock.git",
-                "reference": "011b369030b0976f51d94eba8e255a1f66461df5"
+                "reference": "cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/011b369030b0976f51d94eba8e255a1f66461df5",
-                "reference": "011b369030b0976f51d94eba8e255a1f66461df5",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionDocBlock/zipball/cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e",
+                "reference": "cd72d394ca794d3466a3b2fc09d5a6c1dc86b47e",
                 "shasum": ""
             },
             "require": {
@@ -517,7 +630,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-            "time": "2020-02-17T17:48:35+00:00"
+            "time": "2020-02-22T12:28:44+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -1730,7 +1843,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "ikarus/sps": 20
+        "ikarus/sps": 20,
+        "ikarus/sps-visualizer": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,
