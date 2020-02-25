@@ -204,5 +204,9 @@ abstract class AbstractContext implements ContextInterface
                 $this->paused = true;
                 $this->wait = true;     // leave the exec loop
             });
+        else {
+            $this->paused = true;
+            $this->wait = true;     // leave the exec loop
+        }
     }
 }
