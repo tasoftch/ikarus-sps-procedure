@@ -11,7 +11,7 @@ class PutCommandInstruction extends AbstractInstruction
     /** @var string */
     private $command;
     /** @var array|null */
-    private $arguments;
+    private $arguments = false;
 
     /**
      * PutCommandInstruction constructor.

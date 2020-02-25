@@ -5,7 +5,7 @@ namespace Ikarus\SPS\Procedure\Instruction;
 
 use Ikarus\SPS\Plugin\PluginInterface;
 use Ikarus\SPS\Procedure\Context\ContextInterface;
-use Ikarus\SPS\Procedure\Plugin\ControllablePluginInterface;
+use Ikarus\SPS\Visualizer\Plugin\ControllablePluginInterface;
 
 class StatusInstruction extends AbstractPluginReferenceInstruction
 {
