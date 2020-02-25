@@ -23,10 +23,20 @@
 
 namespace Ikarus\SPS\Procedure;
 
-/**
- * Class NamedProcedure
- * @deprecated use Procedure instead
- */
-class NamedProcedure extends Procedure
+
+use Ikarus\SPS\Procedure\Instruction\InstructionInterface;
+
+class Procedure extends AbstractProcedure
 {
+    /**
+     * Procedure constructor.
+     * @param string $name
+     * @param InstructionInterface $instruction
+     * @param array $attributes
+     */
+    public function __construct(string $name, InstructionInterface $instruction, array $attributes = [])
+    {
+        parent::__construct($name, $attributes);
+        $this->initialInstruction = $instruction;
+    }
 }
