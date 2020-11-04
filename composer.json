@@ -1,7 +1,6 @@
 {
   "name": "ikarus/sps-procedure",
-  "license": "MIT",
-  "minimum-stability": "dev",
+  "license": "BSD-3-Clause",
   "authors": [
     {
       "name": "Thomas Abplanalp",
@@ -15,10 +14,9 @@
   },
   "require" : {
     "php": "^7.2",
-    "ikarus/sps": "dev-master"
+    "ikarus/sps": "^1.3"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6",
-    "ikarus/sps-visualizer": "dev-master"
+    "phpunit/phpunit": "^6"
   }
 }
