@@ -37,6 +37,13 @@ namespace Ikarus\SPS\Procedure\Runtime;
 interface NodeComponentInterface
 {
 	/**
+	 * The component's name. It must not change at all cause all already created nodes are invalid
+	 *
+	 * @return string
+	 */
+	public function getName(): string;
+
+	/**
 	 * Must return a closure that can be extracted.
 	 * Executing this closure must return a promise interface.
 	 *
