@@ -34,24 +34,29 @@
 namespace Ikarus\SPS\Procedure\Runtime\Executable;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
-/**
- * This interface describes the executable's method signature.
- * You must use closures because Ikarus SPS will extract the code into a compiled version.
- * The closure will not be executed in its class context!
- *
- * @package Ikarus\SPS\Dev\Node
- */
-interface ExecutableInterface
+interface NodeData extends \ArrayAccess
 {
 	/**
-	 * This method is responsible that every node using the executable's component is performed.
-	 *
-	 * @param MemoryRegisterInterface $memoryRegister
-	 * @param NodeData $nodeData
-	 * @param InputRegister $inputs
-	 * @param OutputRegister $outputs
+	 * @param $name
+	 * @return bool
 	 */
-	public function __invoke(NodeData $nodeData, InputRegister $inputs, OutputRegister $outputs, MemoryRegisterInterface $memoryRegister);
+	public function hasInput($name): bool;
+
+	/**
+	 * @param $name
+	 * @return bool
+	 */
+	public function isInputConnected($name): bool;
+
+	/**
+	 * @param $name
+	 * @return bool
+	 */
+	public function hasOutput($name): bool;
+
+	/**
+	 * @param $name
+	 * @return bool
+	 */
+	public function isOutputConnected($name): bool;
 }
