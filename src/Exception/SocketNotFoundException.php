@@ -31,51 +31,29 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Exception;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
-interface RuntimeInterface
+class SocketNotFoundException extends ProcedureCompilationException
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	private $socketType;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
-	 * @param string $name
-	 * @param scalar|callable $value
-	 */
-	public function import(string $name, $value);
-
-	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
-	 */
-	public function update(...$args);
-
-	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
 	 * @return mixed
 	 */
-	public function export(string $name);
+	public function getSocketType()
+	{
+		return $this->socketType;
+	}
+
 
 	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
+	 * @param mixed $socketType
+	 * @return SocketNotFoundException
 	 */
-	public function hasTrigger(string $name): bool;
+	public function setSocketType($socketType)
+	{
+		$this->socketType = $socketType;
+		return $this;
+	}
 }

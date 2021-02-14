@@ -31,51 +31,43 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Model;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
+use Ikarus\SPS\Procedure\Model\Socket\Input;
+use Ikarus\SPS\Procedure\Model\Socket\Output;
 
-interface RuntimeInterface
+interface NodeComponentInterface
 {
 	/**
-	 * Sets a trigger redy for the next update
+	 * The component's name. It must not change at all cause all already created nodes are invalid
 	 *
-	 * @param string $name
+	 * @return string
 	 */
-	public function trigger(string $name);
+	public function getName(): string;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
+	 * Defines all possible input's
 	 *
-	 * @param string $name
-	 * @param scalar|callable $value
+	 * @return Output[]
 	 */
-	public function import(string $name, $value);
+	public function getOutputs(): array;
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * @return Input[]
 	 */
-	public function update(...$args);
+	public function getInputs(): array;
 
 	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
+	 * @return Control[]
 	 */
-	public function export(string $name);
+	public function getControls(): array;
 
 	/**
-	 * Returns true, if a trigger reached the given scene export
+	 * Must return a closure that can be extracted.
+	 * Executing this closure must return a promise interface.
 	 *
-	 * @param string $name
-	 * @return bool
+	 * @return \Closure
 	 */
-	public function hasTrigger(string $name): bool;
+	public function getExecutable(): \Closure;
 }

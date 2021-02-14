@@ -31,51 +31,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Compiler\Design;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
-interface RuntimeInterface
+class Connection implements ConnectionInterface
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	/** @var string|int */
+	private $inputNodeID;
+	/** @var string */
+	private $inputName;
+	/** @var string|int */
+	private $outputNodeID;
+	/** @var string */
+	private $outputName;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
-	 * @param string $name
-	 * @param scalar|callable $value
+	 * Connection constructor.
+	 * @param int|string $inputNodeID
+	 * @param string $inputName
+	 * @param int|string $outputNodeID
+	 * @param string $outputName
 	 */
-	public function import(string $name, $value);
+	public function __construct($inputNodeID, string $inputName, $outputNodeID, string $outputName)
+	{
+		$this->inputNodeID = $inputNodeID;
+		$this->inputName = $inputName;
+		$this->outputNodeID = $outputNodeID;
+		$this->outputName = $outputName;
+	}
+
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * @return int|string
 	 */
-	public function update(...$args);
+	public function getInputNodeID()
+	{
+		return $this->inputNodeID;
+	}
 
 	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
+	 * @return string
 	 */
-	public function export(string $name);
+	public function getInputName(): string
+	{
+		return $this->inputName;
+	}
 
 	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
+	 * @return int|string
 	 */
-	public function hasTrigger(string $name): bool;
+	public function getOutputNodeID()
+	{
+		return $this->outputNodeID;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getOutputName(): string
+	{
+		return $this->outputName;
+	}
 }

@@ -31,51 +31,69 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Compiler\Design;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
+use Ikarus\SPS\Procedure\Exception\NodeDoesNotExistException;
 
-interface RuntimeInterface
+class Design implements DesignInterface
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	private $nodes = [];
+	private $connections = [];
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
-	 * @param string $name
-	 * @param scalar|callable $value
+	 * @param $id
+	 * @param string $component
+	 * @param array|null $data
 	 */
-	public function import(string $name, $value);
+	public function addNode($id, string $component, array $data = NULL) {
+		$this->nodes[$id] = [$component,$data];
+	}
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * @param $inputNodeID
+	 * @param string $inputName
+	 * @param $outputNodeID
+	 * @param string $outputName
 	 */
-	public function update(...$args);
+	public function connect($inputNodeID, string $inputName, $outputNodeID, string $outputName) {
+		if(!isset($this->nodes[$inputNodeID]))
+			throw (new NodeDoesNotExistException("Can not find input node $inputNodeID"))->setNode($inputNodeID);
+		if(!isset($this->nodes[$outputNodeID]))
+			throw (new NodeDoesNotExistException("Can not find output node $outputNodeID"))->setNode($outputNodeID);
+
+		$this->connections[] = new Connection($inputNodeID, $inputName, $outputNodeID, $outputName);
+	}
 
 	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
+	 * @inheritDoc
 	 */
-	public function export(string $name);
+	public function getNodeIDs(): array
+	{
+		return array_keys($this->nodes);
+	}
 
 	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
+	 * @inheritDoc
 	 */
-	public function hasTrigger(string $name): bool;
+	public function getNodeComponent($nodeID): string
+	{
+		return $this->nodes[$nodeID][0];
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function getCustomNodeData($nodeID): ?array
+	{
+		return $this->nodes[$nodeID][1];
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function getConnections(): ?array
+	{
+		return $this->connections;
+	}
 }

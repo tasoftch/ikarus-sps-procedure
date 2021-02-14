@@ -31,23 +31,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Model\Socket;
 
 
-interface NodeComponentInterface
+use Ikarus\SPS\Procedure\Model\Control;
+
+interface ControllableSocketInterface extends SocketInterface
 {
 	/**
-	 * The component's name. It must not change at all cause all already created nodes are invalid
-	 *
-	 * @return string
+	 * @return string|Control
 	 */
-	public function getName(): string;
-
-	/**
-	 * Must return a closure that can be extracted.
-	 * Executing this closure must return a promise interface.
-	 *
-	 * @return \Closure
-	 */
-	public function getExecutable(): \Closure;
+	public function getControl();
 }

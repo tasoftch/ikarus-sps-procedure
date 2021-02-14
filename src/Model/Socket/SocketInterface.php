@@ -31,51 +31,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Model\Socket;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
-interface RuntimeInterface
+interface SocketInterface
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	const SOCKET_TYPE_SIGNAL = 'Signal';
 
-	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
-	 * @param string $name
-	 * @param scalar|callable $value
-	 */
-	public function import(string $name, $value);
+	const SOCKET_TYPE_ANY = 'Any';
+	const SOCKET_TYPE_STRING = 'String';
+	const SOCKET_TYPE_NUMBER = 'Number';
+	const SOCKET_TYPE_BOOLEAN = 'Boolean';
 
-	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
-	 */
-	public function update(...$args);
+	public function getName(): string;
 
-	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
-	 */
-	public function export(string $name);
+	public function getLabel(): ?string;
 
-	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
-	 */
-	public function hasTrigger(string $name): bool;
+	public function getType(): string;
+
+	public function isMultiple(): bool;
 }

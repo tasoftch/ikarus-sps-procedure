@@ -31,51 +31,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Compiler\Provider\Socket;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
-interface RuntimeInterface
+class IteratorSocketProvider extends AbstractIteratorSocketProvider
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	const NAME_KEY = 'name';
+
+	/** @var iterable */
+	private $iterator;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
-	 * @param string $name
-	 * @param scalar|callable $value
+	 * GeneratorSocketProvider constructor.
+	 * @param iterable $iterator
 	 */
-	public function import(string $name, $value);
+	public function __construct(iterable $iterator)
+	{
+		$this->iterator = $iterator;
+	}
+
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * @return iterable
 	 */
-	public function update(...$args);
+	public function getIterator(): iterable
+	{
+		return $this->iterator;
+	}
 
-	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
-	 */
-	public function export(string $name);
 
-	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
-	 */
-	public function hasTrigger(string $name): bool;
+	protected function loadSocket(string $name): ?array
+	{
+		if(!$this->cache) {
+			foreach($this->getIterator() as $record) {
+				if($n = $record[static::NAME_KEY] ?? NULL) {
+					$this->cache[$n] = $record;
+				}
+			}
+		}
+		return $this->cache[$name] ?? NULL;
+	}
 }

@@ -31,51 +31,61 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Model;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
+use Ikarus\SPS\Procedure\Model\Socket\Input;
+use Ikarus\SPS\Procedure\Model\Socket\Output;
 
-interface RuntimeInterface
+abstract class AbstractNodeComponent implements NodeComponentInterface
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	private $name;
+	private $inputs = [];
+	private $outputs = [];
+	private $controls = [];
+
+	public function __construct(string $name, ...$items)
+	{
+		$this->name = $name;
+		foreach($items as $item) {
+			if($item instanceof Output)
+				$this->outputs[ $item->getName() ] = $item;
+			elseif($item instanceof Input)
+				$this->inputs[ $item->getName() ] = $item;
+			elseif($item instanceof Control)
+				$this->controls[ $item->getName() ] = $item;
+		}
+	}
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
-	 * @param string $name
-	 * @param scalar|callable $value
+	 * @return string
 	 */
-	public function import(string $name, $value);
+	public function getName(): string
+	{
+		return $this->name;
+	}
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * @return array
 	 */
-	public function update(...$args);
+	public function getInputs(): array
+	{
+		return $this->inputs;
+	}
 
 	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
+	 * @return array
 	 */
-	public function export(string $name);
+	public function getOutputs(): array
+	{
+		return $this->outputs;
+	}
 
 	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
+	 * @return array
 	 */
-	public function hasTrigger(string $name): bool;
+	public function getControls(): array
+	{
+		return $this->controls;
+	}
 }

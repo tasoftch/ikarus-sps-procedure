@@ -31,51 +31,33 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Model\Socket;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
+use Ikarus\SPS\Procedure\Model\Control;
 
-interface RuntimeInterface
+class ControllableInput extends Input implements ControllableSocketInterface
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	/** @var Control|string|null  */
+	private $control;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
+	 * ControllableInput constructor.
 	 * @param string $name
-	 * @param scalar|callable $value
+	 * @param string|null $label
+	 * @param string $type
+	 * @param Control|string|null $control
 	 */
-	public function import(string $name, $value);
+	public function __construct(string $name, string $label = NULL, string $type = self::SOCKET_TYPE_ANY, $control = NULL)
+	{
+		parent::__construct($name, $label, $type);
+		$this->control = $control ?: $type;
+	}
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * @inheritDoc
 	 */
-	public function update(...$args);
-
-	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
-	 */
-	public function export(string $name);
-
-	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
-	 */
-	public function hasTrigger(string $name): bool;
+	public function getControl() {
+		return $this->control;
+	}
 }

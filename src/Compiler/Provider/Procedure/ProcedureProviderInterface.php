@@ -31,51 +31,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Compiler\Provider\Procedure;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
+use Generator;
 
-interface RuntimeInterface
+interface ProcedureProviderInterface
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	const SUB_PROCEDURE_OPTION = 1<<0;
+	const SIGNAL_PROCEDURE_OPTION = 1<<1;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
+	 * Should iterate over all procedures to be compiled in the runtime object and yield their names, json and options
 	 *
-	 * @param string $name
-	 * @param scalar|callable $value
+	 * @param $name
+	 * @param $jsonDesign
+	 * @param $options
+	 * @return Generator
 	 */
-	public function import(string $name, $value);
-
-	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
-	 */
-	public function update(...$args);
-
-	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
-	 */
-	public function export(string $name);
-
-	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
-	 */
-	public function hasTrigger(string $name): bool;
+	public function yieldProcedure(&$name, &$jsonDesign, &$options);
 }

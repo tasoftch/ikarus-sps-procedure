@@ -31,51 +31,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Compiler\Provider\Socket;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
-interface RuntimeInterface
+class CallbackSocketProvider extends AbstractIteratorSocketProvider
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	/** @var callable */
+	private $callback;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
-	 * @param string $name
-	 * @param scalar|callable $value
+	 * CallbackSocketProvider constructor.
+	 * @param callable $callback
 	 */
-	public function import(string $name, $value);
+	public function __construct(callable $callback)
+	{
+		$this->callback = $callback;
+	}
+
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * @return callable
 	 */
-	public function update(...$args);
+	public function getCallback(): callable
+	{
+		return $this->callback;
+	}
 
-	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
-	 */
-	public function export(string $name);
-
-	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
-	 */
-	public function hasTrigger(string $name): bool;
+	protected function loadSocket(string $name): ?array
+	{
+		return call_user_func($this->getCallback(), $name);
+	}
 }

@@ -48,10 +48,10 @@ interface ExecutableInterface
 	/**
 	 * This method is responsible that every node using the executable's component is performed.
 	 *
-	 * @param MemoryRegisterInterface $memoryRegister
 	 * @param NodeData $nodeData
 	 * @param InputRegister $inputs
 	 * @param OutputRegister $outputs
+	 * @param mixed ...$arguments
 	 */
-	public function __invoke(NodeData $nodeData, InputRegister $inputs, OutputRegister $outputs, MemoryRegisterInterface $memoryRegister);
+	public function __invoke(NodeData $nodeData, InputRegister $inputs, OutputRegister $outputs, ...$arguments);
 }

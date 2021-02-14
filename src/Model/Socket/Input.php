@@ -31,51 +31,60 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Model\Socket;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
-interface RuntimeInterface
+class Input implements SocketInterface
 {
-	/**
-	 * Sets a trigger redy for the next update
-	 *
-	 * @param string $name
-	 */
-	public function trigger(string $name);
+	/** @var string */
+	private $name;
+	/** @var string|null */
+	private $label;
+	/** @var string */
+	private $type;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
+	 * Input constructor.
 	 * @param string $name
-	 * @param scalar|callable $value
+	 * @param string|null $label
+	 * @param string $type
 	 */
-	public function import(string $name, $value);
+	public function __construct(string $name, string $label = NULL, string $type = self::SOCKET_TYPE_ANY)
+	{
+		$this->name = $name;
+		$this->label = $label ?? ucfirst($name);
+		$this->type = $type;
+	}
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * @return string
 	 */
-	public function update(...$args);
+	public function getName(): string
+	{
+		return $this->name;
+	}
 
 	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
-	 *
-	 * @param string $name
-	 * @return mixed
+	 * @return string|null
 	 */
-	public function export(string $name);
+	public function getLabel(): ?string
+	{
+		return $this->label;
+	}
 
 	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
+	 * @return string
+	 */
+	public function getType(): string
+	{
+		return $this->type;
+	}
+
+	/**
 	 * @return bool
 	 */
-	public function hasTrigger(string $name): bool;
+	public function isMultiple(): bool
+	{
+		return false;
+	}
 }

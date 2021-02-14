@@ -31,51 +31,38 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Runtime;
+namespace Ikarus\SPS\Procedure\Compiler\Design;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
-interface RuntimeInterface
+interface DesignInterface
 {
 	/**
-	 * Sets a trigger redy for the next update
+	 * Gets a list of all available node ids.
 	 *
-	 * @param string $name
+	 * @return array
 	 */
-	public function trigger(string $name);
+	public function getNodeIDs(): array;
 
 	/**
-	 * Imports a value into the procedures.
-	 * Those values are fetched from the import nodes in scenes.
-	 *
-	 * @param string $name
-	 * @param scalar|callable $value
+	 * Gets the component name for a given node id
+	 * @param $nodeID
+	 * @return string
 	 */
-	public function import(string $name, $value);
+	public function getNodeComponent($nodeID): string;
 
 	/**
-	 * Updates the procedures.
-	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
-	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
-	 * @param mixed ...$args
+	 * Gets custom node data to be compiled for a given node id
+	 *
+	 * @param $nodeID
+	 * @return array|null
 	 */
-	public function update(...$args);
+	public function getCustomNodeData($nodeID): ?array;
 
 	/**
-	 * exports calculated values from the procedures.
-	 * All values that are exported out of scenes can be fetched.
+	 * Gets all connections affecting that node.
+	 * Duplicates don't matter. Return all you have
 	 *
-	 * @param string $name
-	 * @return mixed
+	 * @return array|null
 	 */
-	public function export(string $name);
-
-	/**
-	 * Returns true, if a trigger reached the given scene export
-	 *
-	 * @param string $name
-	 * @return bool
-	 */
-	public function hasTrigger(string $name): bool;
+	public function getConnections(): ?array;
 }
