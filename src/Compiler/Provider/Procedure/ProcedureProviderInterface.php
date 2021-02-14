@@ -38,8 +38,12 @@ use Generator;
 
 interface ProcedureProviderInterface
 {
+	/** @var int Marks a procedure as sub procedure that can be called by other procedures but not from outside */
 	const SUB_PROCEDURE_OPTION = 1<<0;
-	const SIGNAL_PROCEDURE_OPTION = 1<<1;
+	/** @var int Automatically calls the procedure on update */
+	const AUTOCALL_PROCEDURE_OPTION = 1<<1;
+	/** @var int Marks a procedure to be handled as signal triggering procedure */
+	const SIGNAL_PROCEDURE_OPTION = 1<<8;
 
 	/**
 	 * Should iterate over all procedures to be compiled in the runtime object and yield their names, json and options
