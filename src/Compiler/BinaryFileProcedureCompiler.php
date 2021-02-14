@@ -33,13 +33,9 @@
 
 namespace Ikarus\SPS\Procedure\Compiler;
 
-
-use Ikarus\SPS\Procedure\Compiler\Provider\NodeComponent\NodeComponentProviderInterface;
 use Ikarus\SPS\Procedure\Compiler\Provider\Procedure\ProcedureProviderInterface;
-use Ikarus\SPS\Procedure\Exception\NodeComponentNotFoundException;
-use Ikarus\SPS\Procedure\Model\NodeComponentInterface;
 
-class BinaryFileProcedureCompiler extends AbstractProcedureCompiler
+class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 {
 	/** @var string */
 	private $filename;
