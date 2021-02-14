@@ -12,6 +12,7 @@ use Ikarus\SPS\Procedure\Compiler\Provider\Socket\SocketProviderInterface;
 use Ikarus\SPS\Procedure\Exception\NodeComponentNotFoundException;
 use Ikarus\SPS\Procedure\Exception\SocketNotFoundException;
 use Ikarus\SPS\Procedure\Model\NodeComponentInterface;
+use Ikarus\SPS\Procedure\Model\VolatileSocketNodeComponentInterface;
 
 abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 {
@@ -75,8 +76,11 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 
 				$nd = [
 					"@component" => $nc,
-					"@data" => (array) $design->getCustomNodeData($nid),
+					"@data" => $d = (array) $design->getCustomNodeData($nid),
 				];
+
+				if($comp instanceof VolatileSocketNodeComponentInterface)
+					$comp->refreshFromNodeData($d);
 
 				foreach ($comp->getInputs() as $input) {
 					list($t, $signal) = $getSocket($input->getType());
