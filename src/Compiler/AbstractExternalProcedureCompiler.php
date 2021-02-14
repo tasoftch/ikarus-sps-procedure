@@ -35,9 +35,50 @@ namespace Ikarus\SPS\Procedure\Compiler;
 
 
 use Ikarus\SPS\Procedure\Model\NodeComponentInterface;
+use Ikarus\SPS\Procedure\Runtime\Executable\InputRegister;
+use Ikarus\SPS\Procedure\Runtime\Executable\NodeData;
+use Ikarus\SPS\Procedure\Runtime\Executable\OutputRegister;
 
 abstract class AbstractExternalProcedureCompiler extends AbstractProcedureCompiler
 {
+	protected $classImports = [
+		NodeData::class => 'NodeData',
+		InputRegister::class => 'InputRegister',
+		OutputRegister::class => 'OutputRegister'
+	];
+
+	/**
+	 * @param $className
+	 * @param null $alias
+	 */
+	public function addClassImport($className, $alias = NULL) {
+		if(NULL == $alias) {
+			$cn = explode("\\", $className);
+			$alias = array_pop($cn);
+		}
+		$this->classImports[$className] = $alias;
+	}
+
+	/**
+	 * @return string
+	 */
+	protected function stringifyClassImports(): string {
+		$contents = "";
+		foreach($this->classImports as $class => $alias) {
+			$cn = explode("\\", $class);
+			$cn = array_pop($cn);
+			if($alias == $cn)
+				$contents .= "use $class;\n";
+			else
+				$contents .= "use $class as $alias;\n";
+		}
+		return $contents;
+	}
+
+	/**
+	 * @param NodeComponentInterface $component
+	 * @return string|null
+	 */
 	protected function exportExternalCodeForComponent(NodeComponentInterface $component): ?string {
 		$cl = $component->getExecutable();
 		try {

@@ -31,56 +31,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Compiler;
+namespace Ikarus\SPS\Procedure\Runtime;
 
-use Ikarus\SPS\Procedure\Compiler\Provider\Procedure\ProcedureProviderInterface;
-use Ikarus\SPS\Procedure\Model\NodeComponentInterface;
 
-class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
+class AbstractRuntime implements RuntimeInterface
 {
-	/** @var string */
-	private $filename;
-
-	/**
-	 * BinaryFileProcedureCompiler constructor.
-	 * @param string $filename
-	 */
-	public function __construct(string $filename)
-	{
-		$this->filename = $filename;
-	}
-
 
 	/**
 	 * @inheritDoc
 	 */
-	public function compile(ProcedureProviderInterface $procedureProvider)
+	public function trigger(string $name)
 	{
-		$allNodes = $this->prepareFromProvider($procedureProvider);
-		$content = "<?php
-/**
- * Compiled procedures by Ikarus SPS at " . date("d.m.Y G:i:s") . "
- */
-" . $this->stringifyClassImports();
-
-		$content .= "\nreturn function(...\$static_props) {
-	\$CPS = [\n";
-
-		foreach($this->usedComponents as $cn => $component) {
-			$c = $this->exportExternalCodeForComponent($component);
-			$content .= sprintf("\t\t'%s' => %s,\n", $cn, $c);
-		}
-
-		$content = trim($content, "\ \t\n\r\0\x0B,") . "\n\t];\n";
-		$content .= "};\n\n\n";
-		echo $content;
+		// TODO: Implement trigger() method.
 	}
 
 	/**
-	 * @return string
+	 * @inheritDoc
 	 */
-	public function getFilename(): string
+	public function import(string $name, $value)
 	{
-		return $this->filename;
+		// TODO: Implement import() method.
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function update(...$args)
+	{
+		// TODO: Implement update() method.
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function export(string $name)
+	{
+		// TODO: Implement export() method.
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function hasTrigger(string $name): bool
+	{
+		// TODO: Implement hasTrigger() method.
 	}
 }

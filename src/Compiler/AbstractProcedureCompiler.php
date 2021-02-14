@@ -67,6 +67,11 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 				continue;
 			}
 
+			if(!$design) {
+				trigger_error("Procedure $name does not contain a design", E_USER_WARNING);
+				continue;
+			}
+
 			$localNodeData = [];
 
 			$design = $this->getDesignParser()->parseDesign( $design );
