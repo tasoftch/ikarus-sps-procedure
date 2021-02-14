@@ -34,58 +34,75 @@
 namespace Ikarus\SPS\Procedure\Model;
 
 
-use Ikarus\SPS\Procedure\Model\Socket\Input;
-use Ikarus\SPS\Procedure\Model\Socket\Output;
+use Ikarus\SPS\Procedure\Model\Socket\SocketInterface;
 
-abstract class AbstractNodeComponent implements NodeComponentInterface
+abstract class AbstractVolatileNodeComponent extends AbstractNodeComponent implements VolatileSocketNodeComponentInterface
 {
-	private $name;
-	protected $inputs = [];
-	protected $outputs = [];
-	protected $controls = [];
+	private $callback;
 
 	public function __construct(string $name, ...$items)
 	{
-		$this->name = $name;
 		foreach($items as $item) {
-			if($item instanceof Output)
-				$this->outputs[ $item->getName() ] = $item;
-			elseif($item instanceof Input)
-				$this->inputs[ $item->getName() ] = $item;
-			elseif($item instanceof Control)
-				$this->controls[ $item->getName() ] = $item;
+			if(is_callable($item))
+				$this->callback = $item;
 		}
+		parent::__construct($name, ...$items);
 	}
 
-	/**
-	 * @return string
-	 */
-	public function getName(): string
+	public function refreshFromNodeData(?array $nodeData)
 	{
-		return $this->name;
+		if(is_callable($this->callback))
+			call_user_func($this->callback, $nodeData, $this);
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getInputs(): array
-	{
-		return $this->inputs;
+	public function resetInputs() {
+		$this->inputs = [];
+		return $this;
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getOutputs(): array
-	{
-		return $this->outputs;
+	public function resetOutputs() {
+		$this->outputs = [];
+		return $this;
 	}
 
-	/**
-	 * @return array
-	 */
-	public function getControls(): array
-	{
-		return $this->controls;
+	public function resetControls() {
+		$this->controls = [];
+		return $this;
+	}
+
+	public function addInput(SocketInterface $input) {
+		$this->inputs[$input->getName()] = $input;
+		return $this;
+	}
+
+	public function addOutput(SocketInterface $output) {
+		$this->outputs[$output->getName()] = $output;
+		return $this;
+	}
+
+	public function addControl(Control $control) {
+		$this->controls[$control->getName()] = $control;
+		return $this;
+	}
+
+	public function removeInput($name) {
+		if($name instanceof SocketInterface)
+			$name = $name->getName();
+		unset($this->inputs[$name]);
+		return $this;
+	}
+
+	public function removeOutput($name) {
+		if($name instanceof SocketInterface)
+			$name = $name->getName();
+		unset($this->outputs[$name]);
+		return $this;
+	}
+
+	public function removeControl($name) {
+		if($name instanceof SocketInterface)
+			$name = $name->getName();
+		unset($this->controls[$name]);
+		return $this;
 	}
 }

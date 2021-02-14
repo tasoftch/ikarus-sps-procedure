@@ -34,58 +34,11 @@
 namespace Ikarus\SPS\Procedure\Model;
 
 
-use Ikarus\SPS\Procedure\Model\Socket\Input;
-use Ikarus\SPS\Procedure\Model\Socket\Output;
-
-abstract class AbstractNodeComponent implements NodeComponentInterface
+interface VolatileSocketNodeComponentInterface extends NodeComponentInterface
 {
-	private $name;
-	protected $inputs = [];
-	protected $outputs = [];
-	protected $controls = [];
-
-	public function __construct(string $name, ...$items)
-	{
-		$this->name = $name;
-		foreach($items as $item) {
-			if($item instanceof Output)
-				$this->outputs[ $item->getName() ] = $item;
-			elseif($item instanceof Input)
-				$this->inputs[ $item->getName() ] = $item;
-			elseif($item instanceof Control)
-				$this->controls[ $item->getName() ] = $item;
-		}
-	}
-
 	/**
-	 * @return string
+	 * The volatile component gets asked each time before getting inputs or outputs to adjust for a specific node.
+	 * @param array|null $nodeData
 	 */
-	public function getName(): string
-	{
-		return $this->name;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getInputs(): array
-	{
-		return $this->inputs;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getOutputs(): array
-	{
-		return $this->outputs;
-	}
-
-	/**
-	 * @return array
-	 */
-	public function getControls(): array
-	{
-		return $this->controls;
-	}
+	public function refreshFromNodeData(?array $nodeData);
 }
