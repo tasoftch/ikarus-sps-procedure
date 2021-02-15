@@ -40,5 +40,5 @@ interface VolatileSocketNodeComponentInterface extends NodeComponentInterface
 	 * The volatile component gets asked each time before getting inputs or outputs to adjust for a specific node.
 	 * @param array|null $nodeData
 	 */
-	public function refreshFromNodeData(?array &$nodeData);
+	public function refreshFromNodeData(?array $nodeData): ?array;
 }

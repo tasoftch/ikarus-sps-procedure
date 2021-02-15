@@ -35,6 +35,7 @@ namespace Ikarus\SPS\Procedure\Compiler;
 
 
 use Ikarus\SPS\Procedure\Model\NodeComponentInterface;
+use Ikarus\SPS\Procedure\Runtime\AbstractRuntime;
 use Ikarus\SPS\Procedure\Runtime\Executable\InputRegister;
 use Ikarus\SPS\Procedure\Runtime\Executable\NodeData;
 use Ikarus\SPS\Procedure\Runtime\Executable\OutputRegister;
@@ -44,7 +45,8 @@ abstract class AbstractExternalProcedureCompiler extends AbstractProcedureCompil
 	protected $classImports = [
 		NodeData::class => 'NodeData',
 		InputRegister::class => 'InputRegister',
-		OutputRegister::class => 'OutputRegister'
+		OutputRegister::class => 'OutputRegister',
+		AbstractRuntime::class => 'AbstractRuntime'
 	];
 
 	/**

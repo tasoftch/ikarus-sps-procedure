@@ -57,13 +57,24 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 	public function compile(ProcedureProviderInterface $procedureProvider)
 	{
 		$allNodes = $this->prepareFromProvider($procedureProvider);
+
+		foreach($this->usedProcedures as $procName => $info) {
+			list($options, $nodes) = $info;
+			$init = $this->findInitialNodes($nodes, $options & ProcedureProviderInterface::SIGNAL_PROCEDURE_OPTION ? true : false);
+			echo $procName, "\n";
+			array_walk($init, function($n) {
+				echo "\t(${n['@id']}) -> {$n['@component']}\n";
+			});
+		}
+
+
 		$content = "<?php
 /**
  * Compiled procedures by Ikarus SPS at " . date("d.m.Y G:i:s") . "
  */
 " . $this->stringifyClassImports();
 
-		$content .= "\nreturn function(...\$static_props) {
+		$content .= "\nreturn function(array \$static_props = []) {
 	\$CPS = [\n";
 
 		foreach($this->usedComponents as $cn => $component) {
@@ -72,8 +83,15 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 		}
 
 		$content = trim($content, "\ \t\n\r\0\x0B,") . "\n\t];\n";
-		$content .= "};\n\n\n";
-		echo $content;
+		$cid = (int) ((microtime(true) - time()) * 1e6);
+
+		$content .= "\treturn new class(\$static_props) extends AbstractRuntime {
+		private \$p;
+		public function __construct(\$props) {
+			\$this->p = \$props;
+		}
+	};\n};";
+		file_put_contents($this->getFilename(), $content);
 	}
 
 	/**

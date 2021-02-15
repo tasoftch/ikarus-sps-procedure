@@ -49,10 +49,11 @@ abstract class AbstractVolatileNodeComponent extends AbstractNodeComponent imple
 		parent::__construct($name, ...$items);
 	}
 
-	public function refreshFromNodeData(?array &$nodeData)
+	public function refreshFromNodeData(?array $nodeData): ?array
 	{
 		if(is_callable($this->callback))
-			call_user_func($this->callback, $nodeData, $this);
+			return call_user_func($this->callback, $nodeData, $this);
+		return $nodeData;
 	}
 
 	public function resetInputs() {

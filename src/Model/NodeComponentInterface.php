@@ -39,6 +39,11 @@ use Ikarus\SPS\Procedure\Model\Socket\Output;
 
 interface NodeComponentInterface
 {
+	const ACCEPTS_SIGNAL_OPTION = 1<<0;
+	const REQUIRES_SIGNAL_OPTION = 1<<1;
+
+	const ACCEPTS_INITIAL_OPTION = 1<<8;
+
 	/**
 	 * The component's name. It must not change at all cause all already created nodes are invalid
 	 *
@@ -62,6 +67,13 @@ interface NodeComponentInterface
 	 * @return Control[]
 	 */
 	public function getControls(): array;
+
+	/**
+	 * Specify further compiling and executing options.
+	 *
+	 * @return int
+	 */
+	public function getOptions(): int;
 
 	/**
 	 * Must return a closure that can be extracted.

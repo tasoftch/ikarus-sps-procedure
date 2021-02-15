@@ -43,6 +43,7 @@ abstract class AbstractNodeComponent implements NodeComponentInterface
 	protected $inputs = [];
 	protected $outputs = [];
 	protected $controls = [];
+	protected $options = 0;
 
 	public function __construct(string $name, ...$items)
 	{
@@ -87,5 +88,10 @@ abstract class AbstractNodeComponent implements NodeComponentInterface
 	public function getControls(): array
 	{
 		return $this->controls;
+	}
+
+	public function getOptions(): int
+	{
+		return $this->options;
 	}
 }

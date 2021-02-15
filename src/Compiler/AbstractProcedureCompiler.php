@@ -10,6 +10,7 @@ use Ikarus\SPS\Procedure\Compiler\Provider\NodeComponent\NodeComponentProviderIn
 use Ikarus\SPS\Procedure\Compiler\Provider\Procedure\ProcedureProviderInterface;
 use Ikarus\SPS\Procedure\Compiler\Provider\Socket\SocketProviderInterface;
 use Ikarus\SPS\Procedure\Exception\NodeComponentNotFoundException;
+use Ikarus\SPS\Procedure\Exception\SignalComplicationException;
 use Ikarus\SPS\Procedure\Exception\SocketNotFoundException;
 use Ikarus\SPS\Procedure\Model\NodeComponentInterface;
 use Ikarus\SPS\Procedure\Model\VolatileSocketNodeComponentInterface;
@@ -25,6 +26,7 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 
 	protected $usedComponents = [];
 	protected $usedSockets = [];
+	protected $usedProcedures = [];
 
 	/**
 	 * This method checks if all components and sockets exist and creates a redesign of the whole project.
@@ -35,7 +37,7 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 	 * @return array
 	 */
 	protected function prepareFromProvider(ProcedureProviderInterface $procedureProvider): array {
-		$this->usedComponents = $this->usedSockets = $nodeData = [];
+		$this->usedProcedures = $this->usedComponents = $this->usedSockets = $nodeData = [];
 
 		$getComponent = function($component):  NodeComponentInterface {
 			if(NULL === ($comp = $this->usedComponents[$component] ?? NULL)) {
@@ -79,21 +81,31 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 				$nc = $design->getNodeComponent($nid);
 				$comp = $getComponent($nc);
 
-				$nd = [
-					"@component" => $nc,
-					"@data" => $d = (array) $design->getCustomNodeData($nid),
-				];
+				if($comp->getOptions() & $comp::REQUIRES_SIGNAL_OPTION) {
+					if($options & ProcedureProviderInterface::SIGNAL_PROCEDURE_OPTION) {
+						// OK
+					} else
+						throw new SignalComplicationException("Can not compile a signal requiring component inside an expressive procedure", -88);
+				}
 
-				if($comp instanceof VolatileSocketNodeComponentInterface)
-					$comp->refreshFromNodeData($d);
+				$d = (array) $design->getCustomNodeData($nid);
+				if($comp instanceof VolatileSocketNodeComponentInterface) {
+					$d = $comp->refreshFromNodeData($d);
+				}
+
+
+				$nd = [
+					"@component" => [$nc, $comp->getOptions()],
+					"@data" => $d,
+				];
 
 				foreach ($comp->getInputs() as $input) {
 					list($t, $signal) = $getSocket($input->getType());
-					$nd['@inputs'][$input->getName()] = [$t, $signal];
+					$nd['@inputs'][$input->getName()] = [$input->getType(), $signal];
 				}
 				foreach ($comp->getOutputs() as $output) {
 					list($t, $signal) = $getSocket($output->getType());
-					$nd['@outputs'][$output->getName()] = [$t, $signal];
+					$nd['@outputs'][$output->getName()] = [$output->getType(), $signal];
 				}
 
 				$localNodeData[$nid] = $nd;
@@ -105,18 +117,84 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 				list(, $osignal) = $localNodeData[$connection->getOutputNodeID()]["@outputs"][$connection->getOutputName()];
 
 				if($isignal || $osignal) {
-					$localNodeData[$connection->getOutputNodeID()]["@connections"][] = $connection;
+					$localNodeData[$connection->getOutputNodeID()]["@connections"][$connection->getOutputName()] = [
+						0,
+						&$localNodeData[$connection->getInputNodeID()],
+						$connection->getInputName()
+					];
+					$localNodeData[$connection->getInputNodeID()]["@connections"][$connection->getInputName()] = [
+						1,
+						&$localNodeData[$connection->getOutputNodeID()],
+						$connection->getOutputName()
+					];
 				} else {
-					$localNodeData[$connection->getInputNodeID()]["@connections"][] = $connection;
+					$localNodeData[$connection->getInputNodeID()]["@connections"][$connection->getInputName()] = [
+						1,
+						&$localNodeData[$connection->getOutputNodeID()],
+						$connection->getOutputName()
+					];
+					$localNodeData[$connection->getOutputNodeID()]["@connections"][$connection->getOutputName()] = [
+						0,
+						&$localNodeData[$connection->getInputNodeID()],
+						$connection->getInputName()
+					];
 				}
 			}
 
-			foreach($localNodeData as $node) {
+			$this->usedProcedures[$name] = [
+				$options,
+				[]
+			];
+
+			foreach($localNodeData as &$node) {
 				$node["@id"] = $globalNodeID;
 				$nodeData[$globalNodeID++] = $node;
+				$this->usedProcedures[$name][1][] = $node;
 			}
 		}
 		return $nodeData;
+	}
+
+	/**
+	 * This methods figure out all nodes that have no output connection (expression mode) or no input connection (signal mode).
+	 * Those nodes need to be performed first, and then follow their connections.
+	 *
+	 * @param array $bunchOfBundledNodes
+	 * @param bool $signal
+	 * @return array
+	 */
+	protected function findInitialNodes(array $bunchOfBundledNodes, bool $signal = false): array {
+		$init = [];
+		foreach($bunchOfBundledNodes as $node) {
+			list($nc, $opts) = $node["@component"];
+
+			if($opts & NodeComponentInterface::ACCEPTS_INITIAL_OPTION) {
+				if($signal) {
+					$hasConnection = 0;
+					foreach($node["@connections"] as $connection) {
+						list($isInput) = $connection;
+						if($isInput) {
+							$hasConnection = 1;
+							break;
+						}
+					}
+					if(!$hasConnection)
+						$init[] = $node;
+				} else {
+					$hasConnection = 0;
+					foreach($node["@connections"] as $connection) {
+						list($isInput) = $connection;
+						if(!$isInput) {
+							$hasConnection = 1;
+							break;
+						}
+					}
+					if(!$hasConnection)
+						$init[] = $node;
+				}
+			}
+		}
+		return $init;
 	}
 
 
