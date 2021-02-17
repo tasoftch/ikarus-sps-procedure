@@ -67,6 +67,14 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 		private \$p;
 		private \$FN;
 		
+		public function getProperty(string \$name) {
+			return \$this->p[\$name] ?? NULL;
+		}
+		
+		public function getProperties() {
+			return \$this->p;
+		}
+		
 		public function __construct(\$props) {
 			\$this->p = \$props;
 			\$CPS = [\n";
