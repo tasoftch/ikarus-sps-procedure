@@ -34,29 +34,40 @@
 namespace Ikarus\SPS\Procedure\Runtime\Executable;
 
 
-interface NodeData extends \ArrayAccess
+class NodeData extends AbstractRegister
 {
-	/**
-	 * @param $name
-	 * @return bool
-	 */
-	public function hasInput($name): bool;
+	private $arguments = [];
+
+	public function __construct(array &$updated, string $nd = NULL)
+	{
+		parent::__construct($nd);
+
+		if(isset($updated['i'])) {
+			$this->arguments = $updated['i'];
+			unset($updated["i"]);
+		}
+	}
 
 	/**
-	 * @param $name
-	 * @return bool
+	 * @return array
 	 */
-	public function isInputConnected($name): bool;
+	public function getArguments(): array {
+		return $this->arguments;
+	}
 
 	/**
-	 * @param $name
-	 * @return bool
+	 * @param string $name
+	 * @return mixed|null
 	 */
-	public function hasOutput($name): bool;
+	public function getArgument(string $name) {
+		return $this->arguments[$name] ?? NULL;
+	}
 
 	/**
-	 * @param $name
+	 * @param string $name
 	 * @return bool
 	 */
-	public function isOutputConnected($name): bool;
+	public function hasArgument(string $name): bool {
+		return array_key_exists($name, $this->arguments);
+	}
 }

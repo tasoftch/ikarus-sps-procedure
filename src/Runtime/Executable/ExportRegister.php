@@ -31,29 +31,70 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Exception;
+namespace Ikarus\SPS\Procedure\Runtime\Executable;
 
 
-class SocketNotFoundException extends ProcedureCompilationException
+class ExportRegister extends OutputRegister
 {
-	private $socketName;
-
-	/**
-	 * @return mixed
-	 */
-	public function getSocketName()
+	public function __construct(&$contents, &$signals)
 	{
-		return $this->socketName;
+		parent::__construct();
+		$this->contents = &$contents;
+		$this->signals = &$signals;
 	}
 
-
-	/**
-	 * @param mixed $socketName
-	 * @return SocketNotFoundException
-	 */
-	public function setSocketName($socketName)
+	public function offsetExists($offset)
 	{
-		$this->socketName = $socketName;
-		return $this;
+		return isset($this->contents[$offset]);
+	}
+
+	public function &offsetGet($offset)
+	{
+		return $this->contents[$offset];
+	}
+
+	public function offsetSet($offset, $value)
+	{
+		$this->contents[$offset] = $value;
+	}
+
+	public function offsetUnset($offset)
+	{
+		unset($this->contents[$offset]);
+	}
+
+	public function getAvailableOutputNames(): array
+	{
+		return array_keys($this->contents);
+	}
+
+	public function hasOutput(string $name): bool
+	{
+		return isset($this->contents[$name]);
+	}
+
+	public function getOutputType(string $name): ?string
+	{
+		return NULL;
+	}
+
+	public function isOutputConnected(string $name): bool
+	{
+		return false;
+	}
+
+	public function signalExists(string $name): bool
+	{
+		return true;
+	}
+
+	public function hasSignal(string $name): bool
+	{
+		return $this->signals[$name] ?: false;
+	}
+
+	public function triggerSignal(string $name)
+	{
+		$this->signals[$name] = true;
 	}
 }

@@ -34,7 +34,6 @@
 namespace Ikarus\SPS\Procedure\Compiler;
 
 use Ikarus\SPS\Procedure\Compiler\Provider\Procedure\ProcedureProviderInterface;
-use Ikarus\SPS\Procedure\Model\NodeComponentInterface;
 
 class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 {
@@ -57,17 +56,6 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 	public function compile(ProcedureProviderInterface $procedureProvider)
 	{
 		$allNodes = $this->prepareFromProvider($procedureProvider);
-
-		foreach($this->usedProcedures as $procName => $info) {
-			list($options, $nodes) = $info;
-			$init = $this->findInitialNodes($nodes, $options & ProcedureProviderInterface::SIGNAL_PROCEDURE_OPTION ? true : false);
-			echo $procName, "\n";
-			array_walk($init, function($n) {
-				echo "\t(${n['@id']}) -> {$n['@component']}\n";
-			});
-		}
-
-
 		$content = "<?php
 /**
  * Compiled procedures by Ikarus SPS at " . date("d.m.Y G:i:s") . "
@@ -75,7 +63,13 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 " . $this->stringifyClassImports();
 
 		$content .= "\nreturn function(array \$static_props = []) {
-	\$CPS = [\n";
+	return new class(\$static_props) extends AbstractRuntime {
+		private \$p;
+		private \$FN;
+		
+		public function __construct(\$props) {
+			\$this->p = \$props;
+			\$CPS = [\n";
 
 		foreach($this->usedComponents as $cn => $component) {
 			$c = $this->exportExternalCodeForComponent($component);
@@ -83,12 +77,111 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 		}
 
 		$content = trim($content, "\ \t\n\r\0\x0B,") . "\n\t];\n";
-		$cid = (int) ((microtime(true) - time()) * 1e6);
 
-		$content .= "\treturn new class(\$static_props) extends AbstractRuntime {
-		private \$p;
-		public function __construct(\$props) {
-			\$this->p = \$props;
+		$content .= "
+	\$OUTP = [];
+	\$outp_fn = function(\$upd, \$node, \$socket) use (&\$OUTP, &\$ND) {
+		if(!\$OUTP[\$node])
+			\$ND[\$node](\$upd);
+		return \$OUTP[\$node][\$socket];
+	};
+	\$ND = [\n";
+
+		$array_export = function($array) {
+			return var_export(serialize($array), true);
+		};
+
+		foreach($allNodes as $node) {
+			$nid = $node['@id'];
+			list($comp, $options) = $node["@component"];
+
+			$content .= sprintf("\t%d => (function(\$upd) use (\$outp_fn, &\$CPS) {\n", $nid);
+
+			$av_ips = array_map(function($v) {$v[1]*=1;return$v;}, $node["@inputs"] ?? []);
+			$av_ops = array_map(function($v) {$v[1]*=1;return$v;}, $node["@outputs"] ?? []);
+
+			$nodeData = array_filter($node["@data"], function($v, $k) use (&$av_ips, &$av_ops) {
+				if(isset($av_ips[$k])) {
+					$av_ips[$k][2] = $v;
+					return false;
+				}
+				if(isset($av_ops[$k])) {
+					$av_ops[$k][2] = $v;
+					return false;
+				}
+				return true;
+			}, ARRAY_FILTER_USE_BOTH);
+
+			if($nodeData)
+				$content .= sprintf("\t\t\$nd = new NodeData(\$upd, %s);\n",
+					$array_export($nodeData)
+				);
+			else
+				$content .= "\t\t\$nd = new NodeData(\$upd);\n";
+
+
+			foreach($node["@connections"] as $s_name => $connection) {
+				list($input, $n, $nm) = $connection;
+				if($input) {
+					$av_ips[$s_name][1] |= 8;
+					$av_ips[$s_name][2] = "{$n['@id']}:$nm";
+				}
+				else {
+					$av_ops[$s_name][1] |= 8;
+				}
+			}
+
+			if($av_ips)
+				$content .= sprintf("\t\t\$ips = new InputRegister(function(\$n,\$s) use (\$upd, \$outp_fn) {return \$outp_fn(\$upd, \$n, \$s);}, %s);\n", $array_export($av_ips));
+			else
+				$content .= "\t\t\$ips = new InputRegister(function(){});\n";
+
+			if($av_ops)
+				$content .= sprintf("\t\t\$ops = new OutputRegister(%s);\n",
+					$array_export($av_ops)
+				);
+			else
+				$content .= "\t\t\$ops = new OutputRegister();\n";
+
+
+			$content .= "\t\t\$OUTP[$nid] = \$ops;\n";
+			$content .= sprintf("\t\t\$CPS['%s'](\$nd, \$ips, \$ops, ...\$upd);\n", $comp);
+			$content .= "\t})->bindTo(\$this),\n";
+		}
+
+		$content = trim($content, "\ \t\n\r\0\x0B,") . "\n\t\t\t];\n";
+		$content .= "
+			\$FN = [\n";
+		$autoupdated = [];
+		foreach($this->usedProcedures as $procName => $info) {
+			list($options, $nodes) = $info;
+			if($options & ProcedureProviderInterface::AUTOCALL_PROCEDURE_OPTION)
+				$autoupdated[] = var_export($procName, true);
+
+			$isSignal = $options & ProcedureProviderInterface::SIGNAL_PROCEDURE_OPTION ? true : false;
+
+			$init = $this->findInitialNodes($nodes, $isSignal);
+			$exec = [];
+
+			array_walk($init, function($n) use($isSignal, &$exec) {
+				$t = $this->recursiveTraceNodeConnections($n, $isSignal);
+				if($t)
+					$exec[] = $n["@id"];
+			});
+
+			if($exec) {
+				$content .= sprintf("\t'%s' => function(\$upd_args) use (&\$ND) {\n", $procName);
+
+				foreach($exec as $nid) {
+					$content .= "\t\t\$ND[$nid](\$upd_args);\n";
+				}
+
+				$content .= "\t},\n";
+			}
+		}
+		$content = trim($content, "\ \t\n\r\0\x0B,") . "\n\t\t\t];\n";
+		$content .= "\t\t\t\$this->FN = \$FN;
+			\$this->autocall = [". implode(",", $autoupdated) ."];
 		}
 	};\n};";
 		file_put_contents($this->getFilename(), $content);

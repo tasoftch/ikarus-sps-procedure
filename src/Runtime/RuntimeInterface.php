@@ -34,8 +34,6 @@
 namespace Ikarus\SPS\Procedure\Runtime;
 
 
-use Ikarus\SPS\Register\MemoryRegisterInterface;
-
 interface RuntimeInterface
 {
 	/**
@@ -55,6 +53,18 @@ interface RuntimeInterface
 	public function import(string $name, $value);
 
 	/**
+	 * @param string $name
+	 * @return bool
+	 */
+	public function hasProcedure(string $name): bool;
+
+	/**
+	 * @param string $name
+	 * @param array|null $arguments
+	 */
+	public function callProcedure(string $name, array $arguments = NULL);
+
+	/**
 	 * Updates the procedures.
 	 * Calculates all nodes against their connections and follows the passed triggers (or continues them)
 	 * The passed arguments here are forwarded to the node component's executable closure after $nodeData, $inputs, $outputs ...$args
@@ -72,10 +82,24 @@ interface RuntimeInterface
 	public function export(string $name);
 
 	/**
+	 * Exports all received values during an update cycle.
+	 *
+	 * @return array
+	 */
+	public function exportAll(): array;
+
+	/**
 	 * Returns true, if a trigger reached the given scene export
 	 *
 	 * @param string $name
 	 * @return bool
 	 */
 	public function hasTrigger(string $name): bool;
+
+	/**
+	 * Returns all triggered signals during update
+	 *
+	 * @return array
+	 */
+	public function getTriggers(): array;
 }

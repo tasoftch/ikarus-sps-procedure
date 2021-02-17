@@ -31,29 +31,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Exception;
+namespace Ikarus\SPS\Procedure\Runtime\Executable;
 
 
-class SocketNotFoundException extends ProcedureCompilationException
+abstract class AbstractRegister implements \ArrayAccess
 {
-	private $socketName;
+	protected $contents = [];
 
-	/**
-	 * @return mixed
-	 */
-	public function getSocketName()
+	public function __construct(string $serialized = NULL)
 	{
-		return $this->socketName;
+		if($serialized)
+			$this->contents = unserialize($serialized);
+		else
+			$this->contents = [];
 	}
 
+	/**
+	 * @inheritDoc
+	 */
+	public function offsetExists($offset)
+	{
+		return array_key_exists($offset, $this->contents);
+	}
 
 	/**
-	 * @param mixed $socketName
-	 * @return SocketNotFoundException
+	 * @inheritDoc
 	 */
-	public function setSocketName($socketName)
+	public function offsetGet($offset)
 	{
-		$this->socketName = $socketName;
-		return $this;
+		return $this->contents[$offset] ?? NULL;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function offsetSet($offset, $value)
+	{
+		$this->contents[$offset] = $value;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function offsetUnset($offset)
+	{
+		unset($this->contents[$offset]);
 	}
 }

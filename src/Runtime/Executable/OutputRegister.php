@@ -34,6 +34,142 @@
 namespace Ikarus\SPS\Procedure\Runtime\Executable;
 
 
-interface OutputRegister extends InputRegister
+use Ikarus\SPS\Procedure\Exception\SocketNotFoundException;
+
+class OutputRegister extends AbstractRegister
 {
+	protected $signals = [];
+	protected $outputs = [];
+
+	public function __construct(string $serialized = NULL)
+	{
+		parent::__construct();
+		if($s = unserialize($serialized)) {
+			foreach($s as $key => $info) {
+				list($type, $opts) = $info;
+				if($opts & 1) {
+					// Signal input
+					$this->signals[$key] = 0;
+				} else {
+					$this->outputs[ $key ] = [$type, /* Connected or not */  $opts & 8 ? true : false];
+				}
+			}
+		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function offsetExists($offset)
+	{
+		return $this->hasOutput($offset);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function offsetGet($offset)
+	{
+		if(!$this->hasOutput($offset))
+			throw (new SocketNotFoundException("Output $offset does not exist", 404))->setSocketName($offset);
+		return parent::offsetGet($offset);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function offsetSet($offset, $value)
+	{
+		if(!$this->hasOutput($offset))
+			throw (new SocketNotFoundException("Output $offset does not exist", 404))->setSocketName($offset);
+		parent::offsetSet($offset, $value);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function offsetUnset($offset)
+	{
+		if(!$this->hasOutput($offset))
+			throw (new SocketNotFoundException("Output $offset does not exist", 404))->setSocketName($offset);
+		parent::offsetSet($offset, NULL);
+	}
+
+	/**
+	 * Shows all possible outputs defined for the given node
+	 * @return array
+	 */
+	public function getAvailableOutputNames(): array {
+		return array_keys($this->outputs);
+	}
+
+	/**
+	 * Checks, if an output exists
+	 *
+	 * @param string $name
+	 * @return bool
+	 */
+	public function hasOutput(string $name): bool {
+		return array_key_exists($name, $this->outputs);
+	}
+
+	/**
+	 * Returns the type of an output
+	 *
+	 * @param string $name
+	 * @return string|null
+	 */
+	public function getOutputType(string $name): ?string {
+		return $this->outputs[$name][0] ?? NULL;
+	}
+
+	/**
+	 * Checks, if an output has a connection
+	 *
+	 * @param string $name
+	 * @return bool
+	 */
+	public function isOutputConnected(string $name): bool {
+		return $this->outputs[$name][1] ?? false;
+	}
+
+	/**
+	 * Checks if a given signal name exists.
+	 *
+	 * @param string $name
+	 * @return bool
+	 */
+	public function signalExists(string $name): bool {
+		return array_key_exists($name, $this->signals);
+	}
+
+	/**
+	 * Checks if the given signal name was triggered
+	 *
+	 * @param string $name
+	 * @return bool
+	 */
+	public function hasSignal(string $name): bool {
+		return $this->signals[$name] ?: false;
+	}
+
+	/**
+	 * Triggers a signal that will be sent to a connected node's input socket.
+	 *
+	 * @param string $name
+	 */
+	public function triggerSignal(string $name) {
+		if(!$this->signalExists($name))
+			throw (new SocketNotFoundException("Signal socket $name does not exist", 404))->setSocketName($name);
+		$this->signals[$name] = 1;
+	}
+
+	/**
+	 * Returns all triggered signals
+	 *
+	 * @return array
+	 */
+	public function getTriggeredSignals(): array {
+		return array_keys( array_filter( $this->signals ) );
+	}
 }

@@ -10,6 +10,7 @@ use Ikarus\SPS\Procedure\Compiler\Provider\NodeComponent\NodeComponentProviderIn
 use Ikarus\SPS\Procedure\Compiler\Provider\Procedure\ProcedureProviderInterface;
 use Ikarus\SPS\Procedure\Compiler\Provider\Socket\SocketProviderInterface;
 use Ikarus\SPS\Procedure\Exception\NodeComponentNotFoundException;
+use Ikarus\SPS\Procedure\Exception\RecursiveNodeConnectionException;
 use Ikarus\SPS\Procedure\Exception\SignalComplicationException;
 use Ikarus\SPS\Procedure\Exception\SocketNotFoundException;
 use Ikarus\SPS\Procedure\Model\NodeComponentInterface;
@@ -54,7 +55,7 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 		$getSocket = function($name) use (&$signalSockets) {
 			if(NULL === ($sk = $this->usedSockets[$name] ?? NULL)) {
 				if(!$this->getSocketProvider()->socketExists($name))
-					throw (new SocketNotFoundException("Socket $name not found"))->setSocketType($name);
+					throw (new SocketNotFoundException("Socket $name not found"))->setSocketName($name);
 				$this->usedSockets[$name] = $d = [ $this->getSocketProvider()->getSocketType($name), $this->getSocketProvider()->isSignalSocket($name) ];
 				if($d[1])
 					$signalSockets[$name] = $d[0];
@@ -100,11 +101,11 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 				];
 
 				foreach ($comp->getInputs() as $input) {
-					list($t, $signal) = $getSocket($input->getType());
+					list(, $signal) = $getSocket($input->getType());
 					$nd['@inputs'][$input->getName()] = [$input->getType(), $signal];
 				}
 				foreach ($comp->getOutputs() as $output) {
-					list($t, $signal) = $getSocket($output->getType());
+					list(, $signal) = $getSocket($output->getType());
 					$nd['@outputs'][$output->getName()] = [$output->getType(), $signal];
 				}
 
@@ -166,7 +167,7 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 	protected function findInitialNodes(array $bunchOfBundledNodes, bool $signal = false): array {
 		$init = [];
 		foreach($bunchOfBundledNodes as $node) {
-			list($nc, $opts) = $node["@component"];
+			list(, $opts) = $node["@component"];
 
 			if($opts & NodeComponentInterface::ACCEPTS_INITIAL_OPTION) {
 				if($signal) {
@@ -197,6 +198,36 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 		return $init;
 	}
 
+	protected function recursiveTraceNodeConnections(array $node, bool $isSignal = false, array $stack = []): ?array {
+		if(!isset($node["@id"]))
+			return NULL;
+
+
+		if(in_array($node["@id"], $stack))
+			throw (new RecursiveNodeConnectionException("Node connections for #{$node['@@id']} is recursive"))->setNodeID($node["@@id"]);
+
+		$stack[] = $nid = $node["@id"];
+		$trace = [
+			$nid => []
+		];
+
+
+		foreach($node["@connections"] as $connection) {
+			list($input, $nd, $nm) = $connection;
+			$a=NULL;
+
+			if($isSignal && !$input) {
+				if($a = $this->recursiveTraceNodeConnections($nd, $isSignal, $stack))
+					$trace[$nid]['s'][$nm] = $a;
+			}
+
+			elseif(!$isSignal && $input) {
+				if($a = $this->recursiveTraceNodeConnections($nd, $isSignal, $stack))
+					$trace[$nid]['e'][$nm] = $a;
+			}
+		}
+		return $trace;
+	}
 
 	/**
 	 * @return NodeComponentProviderInterface

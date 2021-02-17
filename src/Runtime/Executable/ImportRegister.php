@@ -31,29 +31,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Exception;
+namespace Ikarus\SPS\Procedure\Runtime\Executable;
 
 
-class SocketNotFoundException extends ProcedureCompilationException
+class ImportRegister extends InputRegister
 {
-	private $socketName;
-
-	/**
-	 * @return mixed
-	 */
-	public function getSocketName()
+	public function __construct(array $contents, array $signals)
 	{
-		return $this->socketName;
+		parent::__construct(function(){});
+		$this->contents = $contents;
+		$this->signals = $signals;
 	}
 
-
-	/**
-	 * @param mixed $socketName
-	 * @return SocketNotFoundException
-	 */
-	public function setSocketName($socketName)
+	public function offsetExists($offset)
 	{
-		$this->socketName = $socketName;
-		return $this;
+		return isset($this->contents[$offset]);
+	}
+
+	public function offsetGet($offset)
+	{
+		if(is_callable($v=$this->contents[$offset] ?? NULL))
+			$v=$v();
+		return $v;
+	}
+
+	public function getAvailableInputNames(): array
+	{
+		return array_keys($this->contents);
+	}
+
+	public function hasInput(string $name): bool
+	{
+		return array_key_exists( $name, $this->contents);
+	}
+
+	public function getInputType(string $name): ?string
+	{
+		return NULL;
+	}
+
+	public function isInputConnected(string $name): bool
+	{
+		return false;
 	}
 }

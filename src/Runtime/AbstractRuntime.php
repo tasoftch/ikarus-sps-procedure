@@ -34,15 +34,28 @@
 namespace Ikarus\SPS\Procedure\Runtime;
 
 
+use Ikarus\SPS\Procedure\Runtime\Executable\ExportRegister;
+use Ikarus\SPS\Procedure\Runtime\Executable\ImportRegister;
+
 class AbstractRuntime implements RuntimeInterface
 {
+	protected $imports = [];
+	protected $signals = [];
+
+	protected $exports = [];
+	protected $triggered = [];
+
+	protected $autocall = [];
+	protected $update=[];
+
+	protected $FN;
 
 	/**
 	 * @inheritDoc
 	 */
 	public function trigger(string $name)
 	{
-		// TODO: Implement trigger() method.
+		$this->signals[$name] = 1;
 	}
 
 	/**
@@ -50,7 +63,21 @@ class AbstractRuntime implements RuntimeInterface
 	 */
 	public function import(string $name, $value)
 	{
-		// TODO: Implement import() method.
+		$this->imports[$name] = $value;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function hasProcedure(string $name): bool {
+		return isset($this->FN[$name]) && is_callable($this->FN[$name]);
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function callProcedure(string $name, array $arguments = NULL) {
+		$this->update[$name] = $arguments;
 	}
 
 	/**
@@ -58,7 +85,23 @@ class AbstractRuntime implements RuntimeInterface
 	 */
 	public function update(...$args)
 	{
-		// TODO: Implement update() method.
+		$this->exports = $this->triggered = [];
+		$import = new ImportRegister($this->imports, $this->signals);
+		$export = new ExportRegister($this->exports, $this->triggered);
+
+		foreach($this->autocall as $procName) {
+			if(is_callable( $this->FN[$procName] ))
+				$this->FN[$procName]($args, $import, $export);
+		}
+		foreach($this->update as $procName => $arguments) {
+			if(is_callable( $this->FN[$procName] )) {
+				$a = $args;
+				$a['i'] = $arguments;
+				$this->FN[$procName]($a, $import, $export);
+			}
+		}
+
+		$this->imports = $this->signals = [];
 	}
 
 	/**
@@ -66,14 +109,31 @@ class AbstractRuntime implements RuntimeInterface
 	 */
 	public function export(string $name)
 	{
-		// TODO: Implement export() method.
+		return $this->exports[$name] ?? NULL;
 	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function exportAll(): array
+	{
+		return $this->exports;
+	}
+
 
 	/**
 	 * @inheritDoc
 	 */
 	public function hasTrigger(string $name): bool
 	{
-		// TODO: Implement hasTrigger() method.
+		return $this->triggered[$name] ?: false;
+	}
+
+	/**
+	 * @inheritDoc
+	 */
+	public function getTriggers(): array
+	{
+		return $this->triggered;
 	}
 }

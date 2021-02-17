@@ -43,6 +43,7 @@ interface NodeComponentInterface
 	const REQUIRES_SIGNAL_OPTION = 1<<1;
 
 	const ACCEPTS_INITIAL_OPTION = 1<<8;
+	const ACCEPTS_FINAL_OPTION = 1<<9;
 
 	/**
 	 * The component's name. It must not change at all cause all already created nodes are invalid
