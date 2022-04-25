@@ -36,6 +36,7 @@ namespace Ikarus\SPS\Procedure\Runtime;
 
 use Ikarus\SPS\Procedure\Runtime\Executable\ExportRegister;
 use Ikarus\SPS\Procedure\Runtime\Executable\ImportRegister;
+use Ikarus\SPS\Register\MemoryRegisterInterface;
 
 class AbstractRuntime implements RuntimeInterface
 {
@@ -49,6 +50,8 @@ class AbstractRuntime implements RuntimeInterface
 	protected $update=[];
 
 	protected $FN;
+
+	protected $OUTPC, $NDC;
 
 	/**
 	 * @inheritDoc
@@ -135,5 +138,18 @@ class AbstractRuntime implements RuntimeInterface
 	public function getTriggers(): array
 	{
 		return $this->triggered;
+	}
+
+	public function __invoke(MemoryRegisterInterface $memoryRegister)
+	{
+		$proc = $memoryRegister->getCommand("@procedures");
+		$args = [$memoryRegister];
+
+		if(is_iterable($proc)) {
+			foreach($proc as $arg)
+				$args[] = $arg;
+		}
+		$this->OUTPC = [];
+		$this->update(...$args);
 	}
 }

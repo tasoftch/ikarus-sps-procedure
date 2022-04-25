@@ -51,7 +51,7 @@ class InputRegister extends AbstractRegister
 		parent::__construct();
 		if($s = unserialize($serialized)) {
 			foreach($s as $key => $info) {
-				list($type, $opts, $defOrCon) = $info;
+				@ list($type, $opts, $defOrCon) = $info;
 				if($opts & 1) {
 					// Signal input
 					$this->signals[$key] = 0;

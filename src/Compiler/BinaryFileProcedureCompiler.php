@@ -65,7 +65,6 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 		$content .= "\nreturn function(array \$static_props = []) {
 	return new class(\$static_props) extends AbstractRuntime {
 		private \$p;
-		private \$FN;
 		
 		public function getProperty(string \$name) {
 			return \$this->p[\$name] ?? NULL;
@@ -88,11 +87,14 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 
 		$content .= "
 	\$OUTP = [];
+	\$this->OUTPC = &\$OUTP;
 	\$outp_fn = function(\$upd, \$node, \$socket) use (&\$OUTP, &\$ND) {
-		if(!\$OUTP[\$node])
+		if(!isset(\$OUTP[\$node]) || !\$OUTP[\$node])
 			\$ND[\$node](\$upd);
-		return \$OUTP[\$node][\$socket];
+		return \$OUTP[\$node][\$socket] ?? NULL;
 	};
+	\$NDC = [];
+	\$this->NDC = &\$NDC;
 	\$ND = [\n";
 
 		$array_export = function($array) {
@@ -103,7 +105,7 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 			$nid = $node['@id'];
 			list($comp, $options) = $node["@component"];
 
-			$content .= sprintf("\t%d => (function(\$upd) use (\$outp_fn, &\$CPS) {\n", $nid);
+			$content .= sprintf("\t%d => function(\$upd) use (&\$NDC, &\$OUTP, \$outp_fn, &\$CPS) {\n", $nid);
 
 			$av_ips = array_map(function($v) {$v[1]*=1;return$v;}, $node["@inputs"] ?? []);
 			$av_ops = array_map(function($v) {$v[1]*=1;return$v;}, $node["@outputs"] ?? []);
@@ -121,11 +123,11 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 			}, ARRAY_FILTER_USE_BOTH);
 
 			if($nodeData)
-				$content .= sprintf("\t\t\$nd = new NodeData(\$upd, %s);\n",
+				$content .= sprintf("\t\tif(!isset(\$NDC[$nid]))\$NDC[$nid] = new NodeData(\$upd, %s);\n",
 					$array_export($nodeData)
 				);
 			else
-				$content .= "\t\t\$nd = new NodeData(\$upd);\n";
+				$content .= "\t\tif(!isset(\$NDC[$nid]))\$NDC[$nid] = new NodeData(\$upd);\n";
 
 
 			foreach($node["@connections"] as $s_name => $connection) {
@@ -153,8 +155,8 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 
 
 			$content .= "\t\t\$OUTP[$nid] = \$ops;\n";
-			$content .= sprintf("\t\t\$CPS['%s'](\$nd, \$ips, \$ops, ...\$upd);\n", $comp);
-			$content .= "\t})->bindTo(\$this),\n";
+			$content .= sprintf("\t\t\$CPS['%s'](\$NDC[$nid], \$ips, \$ops, ...\$upd);\n", $comp);
+			$content .= "\t},\n";
 		}
 
 		$content = trim($content, "\ \t\n\r\0\x0B,") . "\n\t\t\t];\n";

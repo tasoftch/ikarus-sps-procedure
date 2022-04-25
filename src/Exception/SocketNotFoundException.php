@@ -37,6 +37,8 @@ namespace Ikarus\SPS\Procedure\Exception;
 class SocketNotFoundException extends ProcedureCompilationException
 {
 	private $socketName;
+	private $nodeID;
+	private $reference;
 
 	/**
 	 * @return mixed
@@ -54,6 +56,42 @@ class SocketNotFoundException extends ProcedureCompilationException
 	public function setSocketName($socketName)
 	{
 		$this->socketName = $socketName;
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getNodeID()
+	{
+		return $this->nodeID;
+	}
+
+	/**
+	 * @param mixed $nodeID
+	 * @return SocketNotFoundException
+	 */
+	public function setNodeID($nodeID)
+	{
+		$this->nodeID = $nodeID;
+		return $this;
+	}
+
+	/**
+	 * @return mixed
+	 */
+	public function getReference()
+	{
+		return $this->reference;
+	}
+
+	/**
+	 * @param mixed $reference
+	 * @return SocketNotFoundException
+	 */
+	public function setReference($reference)
+	{
+		$this->reference = $reference;
 		return $this;
 	}
 }

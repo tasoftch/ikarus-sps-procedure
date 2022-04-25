@@ -30,6 +30,23 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 	protected $usedProcedures = [];
 
 	/**
+	 * @param $nodeComponent
+	 * @param $nodeID
+	 */
+	protected function nodeComponentNotFound($nodeComponent, $nodeID) {
+		throw (new NodeComponentNotFoundException("No component found with name $nodeComponent"))
+			->setComponentName($nodeComponent)
+			->setNodeID($nodeID);
+	}
+
+	protected function socketNotFound($socketName, $nodeID, $reference) {
+		throw (new SocketNotFoundException("Socket $socketName not found"))
+			->setSocketName($socketName)
+			->setNodeID($nodeID)
+			->setReference($reference);
+	}
+
+	/**
 	 * This method checks if all components and sockets exist and creates a redesign of the whole project.
 	 * The redesign is returned as array containing all nodes globally indexed.
 	 * The connections are resolved always from input to output (for expressions) or from output to input (for signals)
@@ -40,11 +57,11 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 	protected function prepareFromProvider(ProcedureProviderInterface $procedureProvider): array {
 		$this->usedProcedures = $this->usedComponents = $this->usedSockets = $nodeData = [];
 
-		$getComponent = function($component):  NodeComponentInterface {
+		$getComponent = function($component, $nodeID):  NodeComponentInterface {
 			if(NULL === ($comp = $this->usedComponents[$component] ?? NULL)) {
 				$comp = $this->getNodeComponentProvider()->getNodeComponent($component);
 				if(!$comp)
-					throw (new NodeComponentNotFoundException("No component found with name $component"))->setComponentName($component);
+					$this->nodeComponentNotFound($component, $nodeID);
 				$this->usedComponents[$component] = $comp;
 			}
 			return $comp;
@@ -52,13 +69,15 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 
 		$signalSockets = [];
 
-		$getSocket = function($name) use (&$signalSockets) {
+		$getSocket = function($name, $nodeID, $ref) use (&$signalSockets) {
 			if(NULL === ($sk = $this->usedSockets[$name] ?? NULL)) {
 				if(!$this->getSocketProvider()->socketExists($name))
-					throw (new SocketNotFoundException("Socket $name not found"))->setSocketName($name);
-				$this->usedSockets[$name] = $d = [ $this->getSocketProvider()->getSocketType($name), $this->getSocketProvider()->isSignalSocket($name) ];
-				if($d[1])
-					$signalSockets[$name] = $d[0];
+					$this->socketNotFound($name, $nodeID, $ref);
+				else {
+					$this->usedSockets[$name] = $d = [ $this->getSocketProvider()->getSocketType($name), $this->getSocketProvider()->isSignalSocket($name) ];
+					if($d[1])
+						$signalSockets[$name] = $d[0];
+				}
 			}
 		};
 
@@ -80,7 +99,7 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 			$design = $this->getDesignParser()->parseDesign( $design );
 			foreach($design->getNodeIDs() as $nid) {
 				$nc = $design->getNodeComponent($nid);
-				$comp = $getComponent($nc);
+				$comp = $getComponent($nc, $nid);
 
 				if($comp->getOptions() & $comp::REQUIRES_SIGNAL_OPTION) {
 					if($options & ProcedureProviderInterface::SIGNAL_PROCEDURE_OPTION) {
@@ -101,11 +120,11 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 				];
 
 				foreach ($comp->getInputs() as $input) {
-					list(, $signal) = $getSocket($input->getType());
+					list(, $signal) = $getSocket($input->getType(), $nid, $input->getName());
 					$nd['@inputs'][$input->getName()] = [$input->getType(), $signal];
 				}
 				foreach ($comp->getOutputs() as $output) {
-					list(, $signal) = $getSocket($output->getType());
+					list(, $signal) = $getSocket($output->getType(), $nid, $output->getName());
 					$nd['@outputs'][$output->getName()] = [$output->getType(), $signal];
 				}
 

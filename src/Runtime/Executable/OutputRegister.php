@@ -46,7 +46,7 @@ class OutputRegister extends AbstractRegister
 		parent::__construct();
 		if($s = unserialize($serialized)) {
 			foreach($s as $key => $info) {
-				list($type, $opts) = $info;
+				@ list($type, $opts) = $info;
 				if($opts & 1) {
 					// Signal input
 					$this->signals[$key] = 0;

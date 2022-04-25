@@ -37,6 +37,7 @@ namespace Ikarus\SPS\Procedure\Exception;
 class NodeComponentNotFoundException extends ProcedureCompilationException
 {
 	private $componentName;
+	private $nodeID;
 
 	/**
 	 * @return mixed
@@ -53,6 +54,24 @@ class NodeComponentNotFoundException extends ProcedureCompilationException
 	public function setComponentName($componentName)
 	{
 		$this->componentName = $componentName;
+		return $this;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getNodeID()
+	{
+		return $this->nodeID;
+	}
+
+	/**
+	 * @param mixed $nodeID
+	 * @return NodeComponentNotFoundException
+	 */
+	public function setNodeID($nodeID)
+	{
+		$this->nodeID = $nodeID;
 		return $this;
 	}
 }

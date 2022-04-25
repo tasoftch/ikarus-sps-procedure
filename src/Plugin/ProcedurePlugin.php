@@ -35,15 +35,36 @@ namespace Ikarus\SPS\Procedure\Plugin;
 
 
 use Ikarus\SPS\Plugin\AbstractPlugin;
+use Ikarus\SPS\Procedure\Runtime\RuntimeInterface;
 use Ikarus\SPS\Register\MemoryRegisterInterface;
 
 class ProcedurePlugin extends AbstractPlugin
 {
+	/** @var string */
+	private $filename;
+	/** @var RuntimeInterface */
+	private $runtime;
+
+	public function __construct(string $filename)
+	{
+		parent::__construct('ikarus-procedures');
+		$this->filename = $filename;
+	}
+
 	/**
 	 * @inheritDoc
 	 */
 	public function update(MemoryRegisterInterface $memoryRegister)
 	{
-		// TODO: Implement update() method.
+		if(!$this->runtime)
+			$this->runtime = require $this->getFilename();
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getFilename(): string
+	{
+		return $this->filename;
 	}
 }

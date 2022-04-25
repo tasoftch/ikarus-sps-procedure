@@ -77,4 +77,9 @@ abstract class AbstractRegister implements \ArrayAccess
 	{
 		unset($this->contents[$offset]);
 	}
+
+	public function __debugInfo()
+	{
+		return $this->contents;
+	}
 }
