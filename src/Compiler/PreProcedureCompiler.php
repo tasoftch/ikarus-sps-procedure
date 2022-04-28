@@ -36,6 +36,10 @@ namespace Ikarus\SPS\Procedure\Compiler;
 
 use Ikarus\SPS\Procedure\Compiler\Provider\Procedure\ProcedureProviderInterface;
 use Ikarus\SPS\Procedure\Exception\NoInitialProcessStartException;
+use Ikarus\SPS\Procedure\Model\PreCompilableNodeComponentInterface;
+use Ikarus\SPS\Procedure\Model\ValueApproximation\NotConnectedValue;
+use Ikarus\SPS\Procedure\Model\ValueApproximation\UndefinedValue;
+use Ikarus\SPS\Procedure\Model\ValueApproximation\ValueApproximationInterface;
 
 class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompilerNodeComponentContextInterface
 {
@@ -45,7 +49,8 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 	private $ignoreWeakProblems = false;
 
 	private $allNodes = [];
-	private $handledNodeIDs = [];
+	private $nodeCompilations = [];
+	private $currentNodeCompilation;
 
 	private $unhandledNodeIDs = [];
 
@@ -72,17 +77,63 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 		$this->addProblem(3, $exception->getCode(), $exception->getMessage(), method_exists($exception, 'getNodeID') ? $exception->getNodeID() : 0);
 	}
 
+	public function getValueApproximation(string $inputName): ?ValueApproximationInterface
+	{
+		if(!isset($this->nodeCompilations[$this->currentNodeCompilation][1][$inputName])) {
+			$sn = function($va) use ($inputName) {
+				return $this->nodeCompilations[$this->currentNodeCompilation][1][$inputName] = $va;
+			};
+
+			$node = $this->allNodes[$this->currentNodeCompilation];
+			$connection = $node["@connections"][$inputName] ?? NULL;
+			if(!$connection)
+				return $sn(new NotConnectedValue());
+
+			list($isInput, $targetNode, $output) = $connection;
+			if($isInput) {
+				$tid = $targetNode["@id"];
+				$va = $this->nodeCompilations[$tid][2][$output] ?? new UndefinedValue();
+				return $sn($va);
+			}
+		}
+		return $this->nodeCompilations[$this->currentNodeCompilation][1][$inputName];
+	}
+
+	public function setValueApproximation(string $outputName, ValueApproximationInterface $approximation)
+	{
+		$this->nodeCompilations[$this->currentNodeCompilation][2][$outputName] = $approximation;
+	}
+
+
 	/**
 	 * @param $nodeID
 	 */
 	private function precompileNode($nodeID) {
-		$this->handledNodeIDs[] = $nodeID;
-
 		$node = $this->allNodes[$nodeID];
 
-		foreach($node["@connections"] ?? [] as $connection) {
+		$this->nodeCompilations[$nodeID] = [$nodeID, [], []];
+		list($componentName, $options) = $node["@component"];
+		$comp = $this->getNodeComponentProvider()->getNodeComponent( $componentName );
 
+		if($comp instanceof PreCompilableNodeComponentInterface) {
+
+			$comp->precompile($this, $options, $node["@data"]);
 		}
+	}
+
+	private function recursiveFollowConnections($nodeID) {
+		$node = $this->allNodes[$nodeID];
+		foreach($node["@connections"] ?? [] as $connection) {
+			list($isInput, $targetNode) = $connection;
+			if($isInput) {
+				$tid = $targetNode["@id"];
+				if(!isset($this->nodeCompilations[$tid]))
+					$this->recursiveFollowConnections($tid);
+			}
+		}
+
+		if(!isset($this->nodeCompilations[$nodeID]))
+			$this->precompileNode($nodeID);
 	}
 
 	/**
@@ -107,11 +158,11 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 				throw new NoInitialProcessStartException("Procedure will never start working, because there is no node to begin");
 
 			foreach($exec as $nid) {
-				$this->precompileNode($nid);
+				$this->recursiveFollowConnections($nid);
 			}
 
 			foreach($this->allNodes as $nid => $node) {
-				if(!in_array($nid, $this->handledNodeIDs)) {
+				if(!isset($this->nodeCompilations[$nid])) {
 					$this->unhandledNodeIDs[] = $nid;
 				}
 			}
