@@ -104,6 +104,16 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 		$this->nodeCompilations[$this->currentNodeCompilation][2][$outputName] = $approximation;
 	}
 
+	public function isSocketConnected(string $inputOrOutputName): bool
+	{
+		$node = $this->allNodes[$this->currentNodeCompilation];
+		return ( $node["@connections"][$inputOrOutputName] ?? NULL ) ? true : false;
+	}
+
+	public function getNodeID()
+	{
+		return $this->currentNodeCompilation;
+	}
 
 	/**
 	 * @param $nodeID
@@ -207,4 +217,6 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 	{
 		return $this->unhandledNodeIDs;
 	}
+
+
 }
