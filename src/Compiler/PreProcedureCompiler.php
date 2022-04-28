@@ -126,7 +126,7 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 		$comp = $this->getNodeComponentProvider()->getNodeComponent( $componentName );
 
 		if($comp instanceof PreCompilableNodeComponentInterface) {
-
+			$this->currentNodeCompilation = $nodeID;
 			$comp->precompile($this, $options, $node["@data"]);
 		}
 	}
