@@ -223,7 +223,7 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 
 
 		if(in_array($node["@id"], $stack))
-			throw (new RecursiveNodeConnectionException("Node connections for #{$node['@@id']} is recursive"))->setNodeID($node["@@id"]);
+			throw (new RecursiveNodeConnectionException("Node connections for #{$node['@id']} is recursive"))->setNodeID($node["@id"]);
 
 		$stack[] = $nid = $node["@id"];
 		$trace = [
