@@ -166,9 +166,9 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 				[]
 			];
 
-			foreach($localNodeData as &$node) {
-				$node["@id"] = $globalNodeID;
-				$nodeData[$globalNodeID++] = $node;
+			foreach($localNodeData as $nid => &$node) {
+				$node["@id"] = $nid;
+				$nodeData[$nid] = $node;
 				$this->usedProcedures[$name][1][] = $node;
 			}
 		}
