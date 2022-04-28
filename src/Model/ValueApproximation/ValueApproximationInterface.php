@@ -31,29 +31,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-namespace Ikarus\SPS\Procedure\Compiler;
+namespace Ikarus\SPS\Procedure\Model\ValueApproximation;
 
 
-use Ikarus\SPS\Procedure\Model\ValueApproximation\ValueApproximationInterface;
-
-interface PreCompilerNodeComponentContextInterface
+interface ValueApproximationInterface
 {
-	const PROBLEM_LEVEL_NOTICE = 0;
-	const PROBLEM_LEVEL_HINT = 1;
-	const PROBLEM_LEVEL_WARNING = 2;
-	const PROBLEM_LEVEL_ERROR = 3;
-
 	/**
-	 * @param $level
-	 * @param $code
-	 * @param $message
-	 * @param $nodeID
+	 * @return string
 	 */
-	public function addProblem($level, $code, $message, $nodeID);
-
-	/**
-	 * @param string $inputName
-	 * @return ValueApproximationInterface|null
-	 */
-	public function getValueApproximation(string $inputName): ?ValueApproximationInterface;
+	public function getName(): string;
 }

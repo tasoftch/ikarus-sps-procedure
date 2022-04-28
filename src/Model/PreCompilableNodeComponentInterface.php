@@ -46,15 +46,11 @@ interface PreCompilableNodeComponentInterface
 	 * @param PreCompilerNodeComponentContextInterface $context
 	 * @param int $componentOptions
 	 * @param array|null $nodeData
-	 * @param array $inputConnections
-	 * @param array $outputConnections
 	 * @return bool
 	 */
 	public function precompile(
 		PreCompilerNodeComponentContextInterface $context,
 		int $componentOptions,
-		array $nodeData,
-		array $inputConnections,
-		array $outputConnections
+		array $nodeData
 	): bool;
 }
