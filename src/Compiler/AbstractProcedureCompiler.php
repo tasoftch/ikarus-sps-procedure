@@ -202,7 +202,7 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 						$init[] = $node;
 				} else {
 					$hasConnection = 0;
-					foreach($node["@connections"] as $connection) {
+					foreach($node["@connections"] ?? [] as $connection) {
 						list($isInput) = $connection;
 						if(!$isInput) {
 							$hasConnection = 1;
@@ -231,7 +231,7 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 		];
 
 
-		foreach($node["@connections"] as $connection) {
+		foreach($node["@connections"] ?? [] as $connection) {
 			list($input, $nd, $nm) = $connection;
 			$a=NULL;
 

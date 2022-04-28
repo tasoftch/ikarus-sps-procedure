@@ -44,6 +44,10 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 	private $problemCount = 0;
 	private $ignoreWeakProblems = false;
 
+	private $allNodes = [];
+	private $handledNodeIDs = [];
+
+	private $unhandledNodeIDs = [];
 
 
 	public function addProblem($level, $code, $message, $nodeID)
@@ -61,16 +65,36 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 		});
 	}
 
+	/**
+	 * @param \Throwable $exception
+	 */
 	protected function addProblemAsException(\Throwable $exception) {
 		$this->addProblem(3, $exception->getCode(), $exception->getMessage(), method_exists($exception, 'getNodeID') ? $exception->getNodeID() : 0);
 	}
 
+	/**
+	 * @param $nodeID
+	 */
+	private function precompileNode($nodeID) {
+		$this->handledNodeIDs[] = $nodeID;
+
+		$node = $this->allNodes[$nodeID];
+
+		foreach($node["@connections"] ?? [] as $connection) {
+
+		}
+	}
+
+	/**
+	 * @inheritDoc
+	 */
 	public function compile(ProcedureProviderInterface $procedureProvider)
 	{
 		try {
-			$allNodes = $this->prepareFromProvider($procedureProvider);
+			$this->allNodes = $this->prepareFromProvider($procedureProvider);
+			$this->handledNodeIDs = $this->unhandledNodeIDs;
 
-			$initial = $this->findInitialNodes($allNodes);
+			$initial = $this->findInitialNodes($this->allNodes);
 			$exec = [];
 
 			array_walk($initial, function($n) use(&$exec) {
@@ -82,7 +106,15 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 			if(!$exec)
 				throw new NoInitialProcessStartException("Procedure will never start working, because there is no node to begin");
 
-			
+			foreach($exec as $nid) {
+				$this->precompileNode($nid);
+			}
+
+			foreach($this->allNodes as $nid => $node) {
+				if(!in_array($nid, $this->handledNodeIDs)) {
+					$this->unhandledNodeIDs[] = $nid;
+				}
+			}
 		} catch (\Throwable $exception) {
 			$this->addProblemAsException($exception);
 		} finally {
@@ -115,5 +147,13 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 	{
 		$this->ignoreWeakProblems = $ignoreWeakProblems;
 		return $this;
+	}
+
+	/**
+	 * @return array
+	 */
+	public function getUnhandledNodeIDs(): array
+	{
+		return $this->unhandledNodeIDs;
 	}
 }
