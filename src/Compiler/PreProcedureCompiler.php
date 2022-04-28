@@ -59,7 +59,7 @@ class PreProcedureCompiler extends AbstractProcedureCompiler implements PreCompi
 	{
 		$this->problemCount++;
 		$this->problems[] = [
-			$level, $code ? $code : $this->problemCount, $message, $nodeID
+			$level, $code ? $code : $this->problemCount, $message, $nodeID == -1 ? $this->currentNodeCompilation : $nodeID
 		];
 
 		usort($this->problems, function($a,$b) {
