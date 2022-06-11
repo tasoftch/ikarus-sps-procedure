@@ -133,8 +133,8 @@ abstract class AbstractProcedureCompiler implements ProcedureCompilerInterface
 
 			/** @var ConnectionInterface $connection */
 			foreach($design->getConnections() as $connection) {
-				list(, $isignal) = $localNodeData[$connection->getInputNodeID()]["@inputs"][$connection->getInputName()];
-				list(, $osignal) = $localNodeData[$connection->getOutputNodeID()]["@outputs"][$connection->getOutputName()];
+				list(, $isignal) = @$localNodeData[$connection->getInputNodeID()]["@inputs"][$connection->getInputName()];
+				list(, $osignal) = @$localNodeData[$connection->getOutputNodeID()]["@outputs"][$connection->getOutputName()];
 
 				if($isignal || $osignal) {
 					$localNodeData[$connection->getOutputNodeID()]["@connections"][$connection->getOutputName()] = [

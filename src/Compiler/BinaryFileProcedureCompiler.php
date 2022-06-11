@@ -133,11 +133,11 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 			foreach($node["@connections"] as $s_name => $connection) {
 				list($input, $n, $nm) = $connection;
 				if($input) {
-					$av_ips[$s_name][1] |= 8;
-					$av_ips[$s_name][2] = "{$n['@id']}:$nm";
+					@$av_ips[$s_name][1] |= 8;
+					@$av_ips[$s_name][2] = "{$n['@id']}:$nm";
 				}
 				else {
-					$av_ops[$s_name][1] |= 8;
+					@$av_ops[$s_name][1] |= 8;
 				}
 			}
 
