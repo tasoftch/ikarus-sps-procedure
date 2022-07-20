@@ -42,6 +42,9 @@ interface ProcedureProviderInterface
 	const SUB_PROCEDURE_OPTION = 1<<0;
 	/** @var int Automatically calls the procedure on update */
 	const AUTOCALL_PROCEDURE_OPTION = 1<<1;
+	/** @var int Automatically calls the procedure once at runtime startup. */
+	const AUTOCALL_ONCE_PROCEDURE_OPTION = 1<<2;
+
 	/** @var int Marks a procedure to be handled as signal triggering procedure */
 	const SIGNAL_PROCEDURE_OPTION = 1<<8;
 

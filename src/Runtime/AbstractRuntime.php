@@ -47,6 +47,7 @@ class AbstractRuntime implements RuntimeInterface
 	protected $triggered = [];
 
 	protected $autocall = [];
+	protected $once = [];
 	protected $update=[];
 
 	protected $FN;
@@ -102,6 +103,14 @@ class AbstractRuntime implements RuntimeInterface
 				$a['i'] = $arguments;
 				$this->FN[$procName]($a, $import, $export);
 			}
+		}
+
+		if($this->once) {
+			foreach($this->once as $procName) {
+				if(is_callable( $this->FN[$procName] ))
+					$this->FN[$procName]($args, $import, $export);
+			}
+			$this->once = [];
 		}
 
 		$this->imports = $this->signals = [];

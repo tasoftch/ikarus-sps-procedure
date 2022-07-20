@@ -162,11 +162,15 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 		$content = trim($content, "\ \t\n\r\0\x0B,") . "\n\t\t\t];\n";
 		$content .= "
 			\$FN = [\n";
+
 		$autoupdated = [];
+		$autoonce = [];
 		foreach($this->usedProcedures as $procName => $info) {
 			list($options, $nodes) = $info;
 			if($options & ProcedureProviderInterface::AUTOCALL_PROCEDURE_OPTION)
 				$autoupdated[] = var_export($procName, true);
+			if($options & ProcedureProviderInterface::AUTOCALL_ONCE_PROCEDURE_OPTION)
+				$autoonce[] = var_export($procName, true);
 
 			$isSignal = $options & ProcedureProviderInterface::SIGNAL_PROCEDURE_OPTION ? true : false;
 
@@ -192,6 +196,7 @@ class BinaryFileProcedureCompiler extends AbstractExternalProcedureCompiler
 		$content = trim($content, "\ \t\n\r\0\x0B,") . "\n\t\t\t];\n";
 		$content .= "\t\t\t\$this->FN = \$FN;
 			\$this->autocall = [". implode(",", $autoupdated) ."];
+			\$this->once = [". implode(",", $autoonce) ."];
 		}
 	};\n};";
 		file_put_contents($this->getFilename(), $content);
