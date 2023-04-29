@@ -40,6 +40,8 @@ use Ikarus\SPS\Register\MemoryRegisterInterface;
 
 class AbstractRuntime implements RuntimeInterface
 {
+	const VIS_CALLED_PROCEDURES_KEY = 'vcl';
+
 	protected $imports = [];
 	protected $signals = [];
 
@@ -98,11 +100,12 @@ class AbstractRuntime implements RuntimeInterface
 				$this->FN[$procName]($args, $import, $export);
 		}
 		foreach($this->update as $procName => $arguments) {
-			if(is_callable( $this->FN[$procName] )) {
+			if(is_callable( $this->FN[$procName] ?? NULL )) {
 				$a = $args;
 				$a['i'] = $arguments;
 				$this->FN[$procName]($a, $import, $export);
-			}
+			} else
+				trigger_error("Procedure $procName does not exist", E_USER_WARNING);
 		}
 
 		if($this->once) {
@@ -113,7 +116,7 @@ class AbstractRuntime implements RuntimeInterface
 			$this->once = [];
 		}
 
-		$this->imports = $this->signals = [];
+		$this->update = $this->imports = $this->signals = [];
 	}
 
 	/**
@@ -152,6 +155,17 @@ class AbstractRuntime implements RuntimeInterface
 	public function __invoke(MemoryRegisterInterface $memoryRegister)
 	{
 		$proc = $memoryRegister->getCommand("@procedures");
+		if(isset( $proc[self::VIS_CALLED_PROCEDURES_KEY] )) {
+			if(count($proc[ self::VIS_CALLED_PROCEDURES_KEY ])) {
+				foreach($proc[self::VIS_CALLED_PROCEDURES_KEY] as $proc_id => $arguments)
+					$this->callProcedure($proc_id, $arguments);
+				$proc[self::VIS_CALLED_PROCEDURES_KEY] = [];
+				$memoryRegister->putCommand("@procedures", $proc);
+			}
+
+			unset( $proc[self::VIS_CALLED_PROCEDURES_KEY] );
+		}
+
 		$args = [$memoryRegister];
 
 		if(is_iterable($proc)) {
